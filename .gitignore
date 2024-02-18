@@ -1,0 +1,7 @@
+target/
+__pycache__/
+index_assets/
+media/
+slides/
+presentation/index.html
+data/
