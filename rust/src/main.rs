@@ -21,9 +21,9 @@ const MOON_ORBITAL_SPEED: f64 = 1_023.;
 
 fn main() {
     let tracer = TracerStep1 {
-        time_step: 10.,
+        time_step: 20.,
         // 2 months.
-        simulation_duration: 60. * 60. * 24. * 30. * 8.,
+        simulation_duration: 60. * 60. * 24. * 30. * 20.,
         bodies: vec![
             Body {
                 mass: EARTH_MASS,
@@ -42,6 +42,18 @@ fn main() {
                 mass: 1.,
                 radius: 1.,
                 pos: Vector3::new(-MOON_EARTH_DISTANCE, 0., 0.),
+                momentum: Vector3::new(0., -MOON_ORBITAL_SPEED * 0.98, 0.),
+            },
+            Body {
+                mass: 1.,
+                radius: 1.,
+                pos: Vector3::new(-MOON_EARTH_DISTANCE, 1., 0.),
+                momentum: Vector3::new(0., -MOON_ORBITAL_SPEED * 0.99, 0.),
+            },
+            Body {
+                mass: 1.,
+                radius: 1.,
+                pos: Vector3::new(-MOON_EARTH_DISTANCE, 2., 0.),
                 momentum: Vector3::new(0., -MOON_ORBITAL_SPEED, 0.),
             },
         ],
@@ -52,16 +64,20 @@ fn main() {
     // Map to serializable data-structure.
     #[derive(Serializable)]
     struct Position {
-        earth: [f64; 3],
-        moon: [f64; 3],
-        moon2: [f64; 3],
+        a: [f64; 3],
+        b: [f64; 3],
+        c: [f64; 3],
+        d: [f64; 3],
+        e: [f64; 3],
     }
     let positions = positions
         .into_iter()
         .map(|v| Position {
-            earth: [v[0].x, v[0].y, v[0].z],
-            moon: [v[1].x, v[1].y, v[1].z],
-            moon2: [v[2].x, v[2].y, v[2].z],
+            a: [v[0].x, v[0].y, v[0].z],
+            b: [v[1].x, v[1].y, v[1].z],
+            c: [v[2].x, v[2].y, v[2].z],
+            d: [v[3].x, v[3].y, v[3].z],
+            e: [v[4].x, v[4].y, v[4].z],
         })
         .collect::<Vec<_>>();
     npy::to_file("../data/earth_moon_positions.npy", positions).unwrap();

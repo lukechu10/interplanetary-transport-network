@@ -10,7 +10,7 @@ class EarthMoonPositions(Slide):
 
         # Apply scaling so that everything fits on the screen
         moon_earth_radius = 384400000
-        scale = moon_earth_radius / 3
+        scale = moon_earth_radius / 2
 
         axes = Axes(x_range=[-1, 1, 1], y_range=[-1, 1, 1])
         self.add(axes)

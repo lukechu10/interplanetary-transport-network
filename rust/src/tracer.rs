@@ -6,8 +6,6 @@ use crate::consts::G;
 pub struct Body {
     /// Mass in kg.
     pub mass: f64,
-    /// Radius in metres.
-    pub radius: f64,
     // Phase space coordinates. Units are SI.
     pub pos: Vector3<f64>,
     pub momentum: Vector3<f64>,
