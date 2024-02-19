@@ -22,8 +22,8 @@ const MOON_ORBITAL_SPEED: f64 = 1_023.;
 fn main() {
     let tracer = TracerStep1 {
         time_step: 10.,
-        // 1 month.
-        simulation_duration: 60. * 60. * 24. * 30. * 100.,
+        // 2 months.
+        simulation_duration: 60. * 60. * 24. * 30. * 8.,
         bodies: vec![
             Body {
                 mass: EARTH_MASS,
@@ -38,6 +38,12 @@ fn main() {
                 pos: Vector3::new(MOON_EARTH_DISTANCE, 0., 0.),
                 momentum: Vector3::new(0., MOON_MASS * MOON_ORBITAL_SPEED, 0.),
             },
+            Body {
+                mass: 1.,
+                radius: 1.,
+                pos: Vector3::new(-MOON_EARTH_DISTANCE, 0., 0.),
+                momentum: Vector3::new(0., -MOON_ORBITAL_SPEED, 0.),
+            },
         ],
     };
 
@@ -48,12 +54,14 @@ fn main() {
     struct Position {
         earth: [f64; 3],
         moon: [f64; 3],
+        moon2: [f64; 3],
     }
     let positions = positions
         .into_iter()
         .map(|v| Position {
             earth: [v[0].x, v[0].y, v[0].z],
             moon: [v[1].x, v[1].y, v[1].z],
+            moon2: [v[2].x, v[2].y, v[2].z],
         })
         .collect::<Vec<_>>();
     npy::to_file("../data/earth_moon_positions.npy", positions).unwrap();
