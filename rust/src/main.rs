@@ -1,16 +1,13 @@
-use nalgebra::Vector3;
-use npy_derive::Serializable;
-use tracer::{Body, TracerStep1};
+use nalgebra::Vector2;
+use ndarray::{array, s};
+use ndarray_npy::write_npy;
+use tracer::{Body, TraceCelestialBodies, TraceShips};
 
 pub mod consts;
 pub mod tracer;
 
-/// Earth radius in metres.
-const EARTH_RADIUS: f64 = 6_371_000.;
 const EARTH_MASS: f64 = 5.972e24;
 
-/// Moon radius in metres.
-const MOON_RADIUS: f64 = 1_737_000.;
 const MOON_MASS: f64 = 7.348e22;
 
 /// Distance from the Earth to the Moon in metres.
@@ -20,65 +17,51 @@ const MOON_EARTH_DISTANCE: f64 = 384_400_000.;
 const MOON_ORBITAL_SPEED: f64 = 1_023.;
 
 fn main() {
-    let tracer = TracerStep1 {
-        time_step: 20.,
+    const SIM_DURATION: f64 = 60. * 60. * 24. * 30.;
+    const TIME_STEP: f64 = 5.;
+
+    let bodies = vec![
+        Body {
+            mass: EARTH_MASS,
+            pos: Vector2::zeros(),
+            // Set Earth's momentum so that center of mass is at rest.
+            velocity: Vector2::new(0., -MOON_MASS / EARTH_MASS * MOON_ORBITAL_SPEED),
+        },
+        Body {
+            mass: MOON_MASS,
+            pos: Vector2::new(MOON_EARTH_DISTANCE, 0.),
+            velocity: Vector2::new(0., MOON_ORBITAL_SPEED),
+        },
+    ];
+    let tracer = TraceCelestialBodies {
+        time_step: TIME_STEP,
         // 2 months.
-        simulation_duration: 60. * 60. * 24. * 30. * 20.,
-        bodies: vec![
-            Body {
-                mass: EARTH_MASS,
-                radius: EARTH_RADIUS,
-                pos: Vector3::zeros(),
-                // Set Earth's momentum so that center of mass is at rest.
-                momentum: Vector3::new(0., -MOON_MASS * MOON_ORBITAL_SPEED, 0.),
-            },
-            Body {
-                mass: MOON_MASS,
-                radius: MOON_RADIUS,
-                pos: Vector3::new(MOON_EARTH_DISTANCE, 0., 0.),
-                momentum: Vector3::new(0., MOON_MASS * MOON_ORBITAL_SPEED, 0.),
-            },
-            Body {
-                mass: 1.,
-                radius: 1.,
-                pos: Vector3::new(-MOON_EARTH_DISTANCE, 0., 0.),
-                momentum: Vector3::new(0., -MOON_ORBITAL_SPEED * 0.98, 0.),
-            },
-            Body {
-                mass: 1.,
-                radius: 1.,
-                pos: Vector3::new(-MOON_EARTH_DISTANCE, 1., 0.),
-                momentum: Vector3::new(0., -MOON_ORBITAL_SPEED * 0.99, 0.),
-            },
-            Body {
-                mass: 1.,
-                radius: 1.,
-                pos: Vector3::new(-MOON_EARTH_DISTANCE, 2., 0.),
-                momentum: Vector3::new(0., -MOON_ORBITAL_SPEED, 0.),
-            },
-        ],
+        simulation_duration: SIM_DURATION,
+        bodies: bodies.clone(),
     };
 
     let positions = tracer.run();
 
-    // Map to serializable data-structure.
-    #[derive(Serializable)]
-    struct Position {
-        a: [f64; 3],
-        b: [f64; 3],
-        c: [f64; 3],
-        d: [f64; 3],
-        e: [f64; 3],
-    }
-    let positions = positions
-        .into_iter()
-        .map(|v| Position {
-            a: [v[0].x, v[0].y, v[0].z],
-            b: [v[1].x, v[1].y, v[1].z],
-            c: [v[2].x, v[2].y, v[2].z],
-            d: [v[3].x, v[3].y, v[3].z],
-            e: [v[4].x, v[4].y, v[4].z],
-        })
-        .collect::<Vec<_>>();
-    npy::to_file("../data/earth_moon_positions.npy", positions).unwrap();
+    let trace_ships = TraceShips {
+        bodies,
+        positions_at_t: positions.clone(),
+        time_step: TIME_STEP,
+        simulation_duration: SIM_DURATION,
+        ship_positions: array![
+            [MOON_EARTH_DISTANCE + 1_000_000., 0.],
+            [MOON_EARTH_DISTANCE + 1_000_000., 0.],
+            [-MOON_EARTH_DISTANCE, 0.],
+        ],
+        ship_velocities: array![
+            [0., MOON_ORBITAL_SPEED + 1000.],
+            [0., MOON_ORBITAL_SPEED - 1000.],
+            [0., -MOON_ORBITAL_SPEED],
+        ],
+    };
+
+    let ship_positions = trace_ships.run();
+    dbg!(&ship_positions.slice(s![0..10, .., ..]));
+
+    write_npy("../data/bodies.npy", &positions).unwrap();
+    write_npy("../data/ships.npy", &ship_positions).unwrap();
 }
