@@ -3,6 +3,6 @@ __pycache__/
 index_assets/
 media/
 slides/
-presentation/index.html
 data/
+dist/
 .vscode/

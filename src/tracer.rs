@@ -116,10 +116,7 @@ impl TraceShips {
                 let m = masses[mass_j];
                 let r = positions.row(mass_j).to_owned() - self.ship_positions.row(ship_i);
                 let r_norm_squared = r.map(|x| x * x).sum();
-                assert!(
-                    r_norm_squared > 0.0,
-                    "bodies cannot be at the same position."
-                );
+                assert!(r_norm_squared > 0.0);
                 let r_unit = r / r_norm_squared.sqrt();
                 a = a + (r_unit * G * m / r_norm_squared);
             }

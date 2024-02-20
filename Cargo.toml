@@ -1,0 +1,13 @@
+[package]
+name = "simulation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4.20"
+nalgebra = "0.32.3"
+ndarray = "0.15.6"
+ndarray-npy = "0.8.1"
+simple_logger = { version = "4.3.3", default-features = false, features = [
+	"colors",
+] }

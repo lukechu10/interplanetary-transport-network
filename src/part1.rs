@@ -1,10 +1,7 @@
+use crate::tracer::{Body, TraceCelestialBodies, TraceShips};
 use nalgebra::Vector2;
-use ndarray::{array, s};
+use ndarray::array;
 use ndarray_npy::write_npy;
-use tracer::{Body, TraceCelestialBodies, TraceShips};
-
-pub mod consts;
-pub mod tracer;
 
 const EARTH_MASS: f64 = 5.972e24;
 
@@ -16,9 +13,9 @@ const MOON_EARTH_DISTANCE: f64 = 384_400_000.;
 /// Moon orbital speed in metres per second.
 const MOON_ORBITAL_SPEED: f64 = 1_023.;
 
-fn main() {
-    const SIM_DURATION: f64 = 60. * 60. * 24. * 30.;
-    const TIME_STEP: f64 = 5.;
+pub fn start() {
+    const SIM_DURATION: f64 = 60. * 60. * 24. * 30. * 20.;
+    const TIME_STEP: f64 = 20.;
 
     let bodies = vec![
         Body {
@@ -48,8 +45,8 @@ fn main() {
         time_step: TIME_STEP,
         simulation_duration: SIM_DURATION,
         ship_positions: array![
-            [MOON_EARTH_DISTANCE + 1_000_000., 0.],
-            [MOON_EARTH_DISTANCE + 1_000_000., 0.],
+            [MOON_EARTH_DISTANCE + 1_0000_000., 0.],
+            [MOON_EARTH_DISTANCE + 1_0000_000., 0.],
             [-MOON_EARTH_DISTANCE, 0.],
         ],
         ship_velocities: array![
@@ -60,8 +57,7 @@ fn main() {
     };
 
     let ship_positions = trace_ships.run();
-    dbg!(&ship_positions.slice(s![0..10, .., ..]));
 
-    write_npy("../data/bodies.npy", &positions).unwrap();
-    write_npy("../data/ships.npy", &ship_positions).unwrap();
+    write_npy("data/bodies.npy", &positions).unwrap();
+    write_npy("data/ships.npy", &ship_positions).unwrap();
 }
