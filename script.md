@@ -10,9 +10,21 @@ To find an answer, we must be able to predict the future. Given an initial condi
 
 To predict the future, we will need many tools. We will start by building a tracer and later on, we will use many tools such as phase space, Lagrange points, stable and unstable manifolds, so that we can eventually find a way to get back home, and to get to any other part of the solar system.
 
-## Building a tracer
+## 1. Building a tracer
 
 > Building a tracer
 > \_Scene with four static masses. Animate changing trajectories while varying initial conditions.
 
 But first, let's build a tracer. What this does is simple. Simulate the tracjectories of a spacecraft under influence of some other masses.
+
+### 1.1. The reduced n-body problem
+
+### 1.2. Simulation Resolution - Building a probability tracer
+
+## 2. Phase space
+
+## 3. Earth-Moon system
+
+## 4. Hopping Manifolds
+
+## 5. Interplanetary Transport Network

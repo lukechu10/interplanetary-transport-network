@@ -5,8 +5,8 @@ pub struct TracePlanets {
     pub masses: Array1<f64>,
     pub positions: Array2<f64>,
     pub velocities: Array2<f64>,
-    pub time_step: f64,
-    pub simulation_duration: f64,
+    pub dt: f64,
+    pub time_steps: usize,
 }
 
 pub fn trace_planets(opts: TracePlanets) -> Array3<f64> {
@@ -14,26 +14,21 @@ pub fn trace_planets(opts: TracePlanets) -> Array3<f64> {
         masses,
         mut positions,
         mut velocities,
-        time_step,
-        simulation_duration,
+        dt,
+        time_steps,
     } = opts;
     let n = masses.len();
     assert_eq!(positions.shape(), [n, 2]);
     assert_eq!(velocities.shape(), [n, 2]);
 
-    let mut time = 0.0;
-
     let mut positions_at_t = Array3::zeros((0, n, 2));
-    while time < simulation_duration {
+    for _ in 0..time_steps {
         positions_at_t.push(Axis(0), positions.view()).unwrap();
-
-        positions = positions + velocities.clone() * time_step;
 
         // Acceleration due to all the other bodies.
         let accelerations = accelerations(&positions, &masses, &positions);
-        velocities = velocities + accelerations * time_step;
-
-        time += time_step;
+        velocities = velocities + accelerations * dt;
+        positions = positions + velocities.clone() * dt;
     }
 
     positions_at_t
@@ -44,8 +39,8 @@ pub struct TraceShips {
     pub mass_positions_at_t: Array3<f64>,
     pub ship_positions: Array2<f64>,
     pub ship_velocities: Array2<f64>,
-    pub time_step: f64,
-    pub simulation_duration: f64,
+    pub dt: f64,
+    pub time_steps: usize,
 }
 
 pub fn trace_ships(opts: TraceShips) -> Array3<f64> {
@@ -54,8 +49,8 @@ pub fn trace_ships(opts: TraceShips) -> Array3<f64> {
         mass_positions_at_t,
         mut ship_positions,
         mut ship_velocities,
-        time_step,
-        simulation_duration,
+        dt,
+        time_steps,
     } = opts;
     assert_eq!(mass_positions_at_t.len_of(Axis(1)), masses.len());
 
@@ -64,16 +59,11 @@ pub fn trace_ships(opts: TraceShips) -> Array3<f64> {
     assert_eq!(ship_velocities.shape(), [n, 2]);
 
     let mut ship_positions_at_t = Array3::zeros((0, n, 2));
-    let mut time = 0.0;
-    // Iteration counter.
-    let mut i = 0;
 
-    while time < simulation_duration {
+    for i in 0..time_steps {
         ship_positions_at_t
             .push(Axis(0), ship_positions.view())
             .unwrap();
-
-        ship_positions = ship_positions + ship_velocities.clone() * time_step;
 
         // Acceleration due to masses only (not other ships).
         let accelerations = accelerations(
@@ -81,10 +71,8 @@ pub fn trace_ships(opts: TraceShips) -> Array3<f64> {
             &masses,
             &mass_positions_at_t.slice(s![i, .., ..]).to_owned(),
         );
-        ship_velocities = ship_velocities + accelerations * time_step;
-
-        time += time_step;
-        i += 1;
+        ship_velocities = ship_velocities + accelerations * dt;
+        ship_positions = ship_positions + ship_velocities.clone() * dt;
     }
 
     ship_positions_at_t
@@ -104,18 +92,13 @@ pub fn accelerations(
     let mut buf = Array::zeros((n, 2));
 
     for (mut buf, position) in buf.rows_mut().into_iter().zip(positions.rows().into_iter()) {
-        let mut acceleration = Array1::<f64>::zeros(2);
         let r = mass_positions - position.to_owned();
-        for (&mass, r) in masses.iter().zip(r.rows().into_iter()) {
-            let r_norm_squared = r.map(|x| x * x).sum();
-            if r_norm_squared == 0.0 {
-                // Skip if the bodies are at the same position.
-                continue;
-            }
-            let r_unit = r.to_owned() / r_norm_squared.sqrt();
-            // Note, we are setting G = 1.
-            acceleration = acceleration + (r_unit * mass / r_norm_squared);
-        }
+        let r_normed_squared = r
+            .map(|x| x * x)
+            .sum_axis(Axis(1))
+            .map(|&x| if x == 0. { 1. } else { x });
+        let r_unit = r / r_normed_squared.mapv(f64::sqrt);
+        let acceleration = (r_unit * masses / r_normed_squared).sum_axis(Axis(0));
         buf.assign(&acceleration);
     }
 

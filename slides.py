@@ -2,6 +2,8 @@ import numpy as np
 from manim import *
 from manim_slides.slide import Slide
 
+config.disable_caching = True
+
 # Title
 class Part0(Slide):
     def construct(self):

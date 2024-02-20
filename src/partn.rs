@@ -13,13 +13,10 @@ const MOON_ORBITAL_SPEED: f64 = 1.;
 
 pub fn start() {
     // Units are c * secs.
-    const SIM_DURATION: f64 = 10.;
-    const TIME_STEP: f64 = 0.01;
+    let time_steps = 2000;
+    let dt = 0.01;
 
-    log::info!(
-        "time step = {TIME_STEP}, simulation duration = {SIM_DURATION}, total steps = {}",
-        SIM_DURATION / TIME_STEP
-    );
+    log::info!("dt = {dt}, time steps = {time_steps}",);
 
     let opts = TracePlanets {
         masses: array![EARTH_MASS, MOON_MASS],
@@ -28,9 +25,9 @@ pub fn start() {
             [0., -MOON_MASS / EARTH_MASS * MOON_ORBITAL_SPEED],
             [0., MOON_ORBITAL_SPEED],
         ],
-        time_step: TIME_STEP,
+        dt,
         // 2 months.
-        simulation_duration: SIM_DURATION,
+        time_steps,
     };
 
     log::info!("tracing planets");
@@ -39,8 +36,8 @@ pub fn start() {
     let opts = TraceShips {
         masses: array![EARTH_MASS, MOON_MASS],
         mass_positions_at_t: positions.clone(),
-        time_step: TIME_STEP,
-        simulation_duration: SIM_DURATION,
+        dt,
+        time_steps,
         ship_positions: array![
             [MOON_EARTH_DISTANCE + 0.1, 0.],
             [MOON_EARTH_DISTANCE + 0.1, 0.],
