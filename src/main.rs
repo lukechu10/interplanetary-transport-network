@@ -1,8 +1,8 @@
 use log::{error, info};
 use simple_logger::SimpleLogger;
 
-pub mod consts;
 pub mod part1;
+pub mod partn;
 pub mod tracer;
 
 fn main() {
@@ -13,10 +13,11 @@ fn main() {
         return;
     };
 
-    info!("running simulation {arg}");
+    info!("running simulation `{arg}`");
 
     match arg.as_str() {
         "part1" => part1::start(),
+        "partn" => partn::start(),
         _ => panic!("unknown argument"),
     }
 }

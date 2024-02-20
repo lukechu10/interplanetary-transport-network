@@ -6,3 +6,7 @@ slides/
 data/
 dist/
 .vscode/
+
+perf.data
+perf.data.old
+flamegraph.svg
