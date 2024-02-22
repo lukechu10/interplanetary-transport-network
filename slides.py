@@ -1,10 +1,16 @@
 import numpy as np
 from manim import *
-from manim_slides.slide import Slide
+from manim.opengl import *
+from manim_slides.slide import Slide, ThreeDSlide
 
-config.disable_caching = True
+EARTH_MASS = 1.0
+MOON_MASS = 0.0123
+EARTH_MOON_MU = EARTH_MASS * MOON_MASS / (EARTH_MASS + MOON_MASS)
 
-# Title
+# ----------
+# Slides
+# ----------
+
 class Part0(Slide):
     def construct(self):
         title = Text("Budget-friendly space travel")
@@ -30,7 +36,68 @@ class Part2(Slide):
 # 3. The 3-body problem
 class Part3(Slide):
     def construct(self):
+
         pass
+
+# 3.c. Effective potential.
+class EffectivePotential(ThreeDSlide):
+    def construct(self):
+        scale = 2
+
+        axes = ThreeDAxes()
+
+        x_label = axes.get_x_axis_label(Tex("x"))
+        y_label = axes.get_y_axis_label(Tex("y")).shift(UP * 1.8)
+        z_label = axes.get_z_axis_label(Tex("V(x, y)"))
+
+        # self.set_camera_orientation(zoom=0.5)
+
+        self.play(Create(axes), FadeIn(x_label), FadeIn(y_label), FadeIn(z_label))
+
+
+        earth_pos = np.array([-EARTH_MOON_MU, 0, 0])
+        earth = Dot3D(point=earth_pos * scale, color=BLUE, radius=0.2)
+        moon_pos = np.array([1 - EARTH_MOON_MU, 0, 0])
+        moon = Dot3D(point=moon_pos * scale, color=GRAY, radius=0.1)
+        self.play(Create(earth), Create(moon))
+
+        self.move_camera(phi=50 * DEGREES, theta=-60 * DEGREES, zoom=1, run_time=1.5)
+
+        def grav_potential(x, y):
+            pos = np.array([x, y, 0])
+            r_earth = earth_pos - pos
+            r_moon = moon_pos - pos
+            return -1 / np.linalg.norm(r_earth) - 0.0123 / np.linalg.norm(r_moon)
+
+        grav_potential_surface = OpenGLSurface(
+            uv_func=lambda u, v: np.array([u, v, max(grav_potential(u, v), -20)]) * scale,
+            u_range=[-1.5, 1.5], v_range=[-1.5,1.5],
+            axes=axes,
+            color=RED,
+            resolution=(64, 64),
+            opacity=0.5,
+        )
+        self.play(Create(grav_potential_surface))
+        
+        def centripetal_potential(x, y):
+            # Fc = m omega^2 r so Vc = omega^2 r^2 / 2
+            r_squared = x * x + y * y
+            omega = 1
+            return - (omega ** 2) * r_squared / 2
+        
+        def effective_potential(x, y):
+            return grav_potential(x, y) + centripetal_potential(x, y)
+
+        effective_potential_surface = OpenGLSurface(
+            uv_func=lambda u, v: np.array([u, v, max(effective_potential(u, v), -20)]) * scale,
+            u_range=[-1.5, 1.5], v_range=[-1.5,1.5],
+            axes=axes,
+            color=BLUE,
+            resolution=(64, 64),
+            opacity=0.5,
+        )
+        self.play(Transform(grav_potential_surface, effective_potential_surface))
+        self.interactive_embed()
 
 # 4. Stable and unstable manifolds
 class Part4(Slide):
