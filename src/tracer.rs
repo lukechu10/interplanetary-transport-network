@@ -99,11 +99,13 @@ pub fn accelerations(
             r.map(|x| x * x)
                 .sum_axis(Axis(1))
                 .map(|&x| if x == 0. { 1. } else { x.sqrt() });
-        let accelerations = r * masses.into_shape([masses.len(), 1]).unwrap()
-            / r_normed_squared
-                .map(|&x| x.sqrt().powi(3))
-                .into_shape([masses.len(), 1])
-                .unwrap();
+
+        let masses = masses.into_shape([masses.len(), 1]).unwrap();
+        let r_cubed = r_normed_squared
+            .map(|&x| x.powi(3))
+            .into_shape([masses.len(), 1])
+            .unwrap();
+        let accelerations = r * masses / r_cubed;
         buf.assign(&accelerations.sum_axis(Axis(0)));
     }
 

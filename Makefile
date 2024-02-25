@@ -2,6 +2,9 @@
 build-video:
 	manim -q$(q) slides.py $(slide) --renderer opengl --write_to_movie
 
+build-video-preview:
+	manim -q$(q) slides.py $(slide) --renderer opengl --preview
+
 # Build slide to an image with given quality
 build-image:
 	manim -q$(q) slides.py $(slide) -s

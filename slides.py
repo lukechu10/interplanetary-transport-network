@@ -1,3 +1,4 @@
+from manim.utils.color.X11 import WHITESMOKE
 import numpy as np
 from manim import *
 from manim.opengl import *
@@ -104,7 +105,7 @@ class EffectivePotential(ThreeDSlide):
             return grav_potential(x, y) + centripetal_potential(x, y)
 
         effective_potential_surface = OpenGLSurface(
-            uv_func=lambda u, v: np.array([u, v, max(effective_potential(u, v), -20)]) * scale,
+            uv_func=lambda u, v: np.array([u, v, max(effective_potential(u, v), -20) + 1]) * scale,
             u_range=[-1.5, 1.5], v_range=[-1.5,1.5],
             axes=axes,
             color=BLUE,
@@ -126,8 +127,8 @@ class Part5(Slide):
 
 class PartN(Slide):
     def construct(self):
-        bodies_data = np.load("data/bodies.npy")
-        ships_data = np.load("data/ships.npy")
+        bodies_data = np.load("data/part1a_bodies.npy")
+        ships_data = np.load("data/part1a_ships.npy")
         bodies_count = len(bodies_data[0])
         ships_count = len(ships_data[0])
 
@@ -153,13 +154,13 @@ class PartN(Slide):
 
         # Add ships
         ship_dots = []
-        ship_colors = [RED, YELLOW, PURPLE, GREEN, ORANGE]
+        ship_colors = [BLUE]
         for i in range(ships_count):
             color = ship_colors[i % len(ship_colors)]
             ship_dots.append(Dot(color=color).set_x(ships_data[0][i][0] * scale).set_y(ships_data[0][i][1] * scale))
         ship_traces = []
         for i in range(ships_count):
-            color = ship_colors[i % len(ship_colors)]
+            color = WHITE
             ship_traces.append(TracedPath(ship_dots[i].get_center, stroke_color=color, dissipating_time=0.3))
 
         self.add(*ship_dots)
@@ -179,4 +180,5 @@ class PartN(Slide):
             ship_dots[i].add_updater(update(ships_data, i))
 
 
-        self.play(time_step.animate.set_value(1), run_time=10, rate_func=linear)
+        self.play(time_step.animate.set_value(1), run_time=15, rate_func=linear)
+        self.interactive_embed()

@@ -1,14 +1,18 @@
 # Budget-friendly space travel
 
+<!-- TODO: figure out a better title -->
+
 > Traveling in space
 > Luke Chu
 > 6 March 2024
 
-You are stuck in a spaceship orbiting around the moon and you wish to come back home. But fuel is running low and you realise that you do not have enough to make a transfer burn back to Earth. What do you do? Perhaps making a transfer burn is not the only way to get back.
+You are currently in a spaceship orbiting around Moon. How do you get back home? After all, there are an infinite number of different trajectories you could take, each one requiring more or less fuel and more or less time. How do we know which one to pick?
 
-To find an answer, we must be able to predict the future. Given an initial condition, where will we end up?
+The answer should be pretty easy right? First, fire prograde relative to the moon to reduce your speed relative to the Earth. And then, as you approach Earth, fire retrograde again to get into Low Earth Orbit. Finally, land! This is the Hoffmann transfer which is supposed to be the most efficient transfer orbit.
 
-To predict the future, we will need many tools. We will start by building a tracer and later on, we will use many tools such as phase space, Lagrange points, stable and unstable manifolds, so that we can eventually find a way to get back home, and to get to any other part of the solar system.
+But your fuel is running precariously low and you realise that you won't actually have enough fuel to perform the final burn to get into Low Earth Orbit. What can you do insted?
+
+To figure this out, we will need to be able to predict the future. We will start by building a tracer and use many tools such as phase space, Lagrange points, stable and unsatble manifolds to find out the most efficient way of getting back home.
 
 ## 1. Building a tracer
 
