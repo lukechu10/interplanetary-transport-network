@@ -11,7 +11,7 @@ EARTH_MOON_MU = EARTH_MASS * MOON_MASS / (EARTH_MASS + MOON_MASS)
 # Slides
 # ----------
 
-class Part0(Slide):
+class TitleSlide(Slide):
     def construct(self):
         title = Text("Budget-friendly space travel")
         author = Text("Luke Chu").next_to(title, DOWN)
@@ -22,6 +22,21 @@ class Part0(Slide):
 
         self.add(title, author, date)
         self.wait()
+
+# TODO: Fix layout, add animations
+class ReducedNBodyProblem(Slide):
+    def construct(self):
+        left = VGroup(Text("Full n-body problem"), Tex("3 bodies"), Tex("3 forces")).arrange(DOWN)
+        center = VGroup(Text("Planets"), Tex("2 bodies"), Tex("2 forces")).arrange(DOWN)
+        right = VGroup(Text("Ship reaction"), Tex("1 body"), Tex("2 forces")).arrange(DOWN)
+
+        left.align_on_border(LEFT)
+        center.next_to(left, RIGHT)
+        right.next_to(center, RIGHT)
+
+        self.play(Write(left))
+        self.play(Write(center), Write(right))
+
 
 # 1. Building a tracer.
 class Part1(Slide):

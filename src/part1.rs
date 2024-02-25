@@ -15,23 +15,25 @@ pub fn start() {
 
     let num_ships = 12;
 
+    let ship_positions = array![0.5, -1.]
+        .broadcast((num_ships, 2))
+        .unwrap()
+        .to_owned()
+        + Array2::from_shape_fn(
+            (num_ships, 2),
+            |(i, j)| if j == 0 { 0.03 * i as f64 } else { 0. },
+        );
+    let ship_velocites = array![0., 1.3]
+        .broadcast((num_ships, 2))
+        .unwrap()
+        .to_owned();
     let opts = TraceShips {
-        masses: mass,
-        mass_positions_at_t: mass_positions_at_t.clone(),
+        masses: mass.view(),
+        mass_positions_at_t: mass_positions_at_t.view(),
         dt,
         time_steps,
-        ship_positions: array![0.5, -1.]
-            .broadcast((num_ships, 2))
-            .unwrap()
-            .to_owned()
-            + Array2::from_shape_fn(
-                (num_ships, 2),
-                |(i, j)| if j == 0 { 0.03 * i as f64 } else { 0. },
-            ),
-        ship_velocities: array![0., 1.3]
-            .broadcast((num_ships, 2))
-            .unwrap()
-            .to_owned(),
+        ship_positions: ship_positions.view(),
+        ship_velocities: ship_velocites.view(),
     };
 
     log::info!("tracing ships");

@@ -2,7 +2,7 @@ use log::{error, info};
 use simple_logger::SimpleLogger;
 
 pub mod part1;
-pub mod partn;
+pub mod part1a;
 pub mod tracer;
 
 fn main() {
@@ -17,7 +17,7 @@ fn main() {
 
     match arg.as_str() {
         "part1" => part1::start(),
-        "partn" => partn::start(),
+        "part1a" => part1a::start(),
         _ => panic!("unknown argument"),
     }
 }
