@@ -4,6 +4,7 @@ use simple_logger::SimpleLogger;
 pub mod part1;
 pub mod part1a;
 pub mod part1b;
+pub mod part1b_compare;
 pub mod tracer;
 
 fn main() {
@@ -20,6 +21,7 @@ fn main() {
         "part1" => part1::start(),
         "part1a" => part1a::start(),
         "part1b" => part1b::start(),
+        "part1b_compare" => part1b_compare::start(),
         _ => panic!("unknown argument"),
     }
 }

@@ -153,18 +153,11 @@ class PartN(Slide):
         self.next_slide()
 
         # Add ships
-        ship_dots = []
-        for i in range(ships_count):
-            point = Dot(point=[ship_data[0,i,0] * scale, ship_data[0,i,1] * scale, 0], color=WHITE, radius=0.01)
-            # ship_dots.append(Dot(color=WHITE, radius=0.02, point=[ships_data[0,i,0] * scale, ships_data[0,i,1] * scale, 0])) # type: ignore
-            ship_dots.append(point)
-
-        # self.add(*ship_dots)
-
-        ship_dots = TrueDot(center=ORIGIN, color=WHITE)
+        ship_dots = TrueDot(center=ORIGIN)
         ship_dots.clear_points()
         ship_points = np.pad(ship_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
         ship_dots.add_points(ship_points)
+        ship_dots.set_color(WHITE)
 
         self.add(ship_dots)
 
@@ -178,15 +171,14 @@ class PartN(Slide):
             return f
         for i in range(bodies_count):
             dots[i].add_updater(update(bodies_data, i))
-        # for i in range(ships_count):
-        #     ship_dots[i].add_updater(update(ship_data, i))
 
         def update_ships(mob):
             ship_points = np.pad(ship_data[int((len(ship_data) - 1) * time_step.get_value())] * scale, ((0, 0), (0, 1)), mode="constant")
             mob.clear_points()
             mob.add_points(ship_points)
+            mob.set_color(WHITE)
         ship_dots.add_updater(update_ships)
 
 
-        self.play(time_step.animate.set_value(1), run_time=15, rate_func=linear)
+        self.play(time_step.animate.set_value(1), run_time=25, rate_func=linear)
         self.interactive_embed()

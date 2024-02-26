@@ -4,8 +4,8 @@ use ndarray_npy::write_npy;
 
 pub fn start() {
     // Units are c * secs.
-    let total_time = 10.;
-    let dt = 0.0004;
+    let total_time = 4.;
+    let dt = 0.0002;
     let time_steps = (total_time / dt) as usize;
 
     log::info!("dt = {dt}, time steps = {time_steps}");
@@ -27,8 +27,8 @@ pub fn start() {
     };
     let mass_positions_at_t = trace_planets(opts);
 
-    let num_ships_per_velocity = 200;
-    let num_velocity_groups = 6;
+    let num_ships_per_velocity = 50;
+    let num_velocity_groups = 3;
     let num_ships = num_ships_per_velocity * num_velocity_groups;
 
     // Ships start all around LEO.
@@ -36,7 +36,7 @@ pub fn start() {
     // Radius of LEO is 6728km.
     // Radius of Moon orbit is 384467km.
     // Normalise LEO radius so that Moon orbit is 1.
-    let leo_r = 0.0174995;
+    let leo_r = 0.05; // FIXME: wrong value on purpose
     let ship_positions = Array2::from_shape_fn((num_ships, 2), |(i, j)| {
         let theta = 2. * std::f64::consts::PI * i as f64 / num_ships_per_velocity as f64;
         if j == 0 {
@@ -46,12 +46,9 @@ pub fn start() {
         }
     });
     let leo_v = (m1 / leo_r).sqrt();
-    // FIXME: The values below are actually incorrect because of numerical rounding errors.
-    // However, they give the correct qualitative behaviour. To fix this, we should introduce
-    // variable time-stepping and simulate with smaller time step at the start.
-    let min_v = leo_v * 1.2;
+    let min_v = leo_v * 1.405;
     // let max_v = leo_v * 1.41;
-    let max_v = leo_v * 1.4;
+    let max_v = leo_v * 2.0;
 
     let ship_velocities = Array2::from_shape_fn((num_ships, 2), |(i, j)| {
         let velocity_group = i / num_ships_per_velocity;
