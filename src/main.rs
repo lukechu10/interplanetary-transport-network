@@ -3,6 +3,7 @@ use simple_logger::SimpleLogger;
 
 pub mod part1;
 pub mod part1a;
+pub mod part1b;
 pub mod tracer;
 
 fn main() {
@@ -18,6 +19,7 @@ fn main() {
     match arg.as_str() {
         "part1" => part1::start(),
         "part1a" => part1a::start(),
+        "part1b" => part1b::start(),
         _ => panic!("unknown argument"),
     }
 }

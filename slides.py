@@ -1,5 +1,5 @@
-from manim.utils.color.X11 import WHITESMOKE
 import numpy as np
+
 from manim import *
 from manim.opengl import *
 from manim_slides.slide import Slide, ThreeDSlide
@@ -127,13 +127,13 @@ class Part5(Slide):
 
 class PartN(Slide):
     def construct(self):
-        bodies_data = np.load("data/part1a_bodies.npy")
-        ships_data = np.load("data/part1a_ships.npy")
+        bodies_data = np.load("data/part1b_bodies.npy")
+        ship_data = np.load("data/part1b_ships.npy")
         bodies_count = len(bodies_data[0])
-        ships_count = len(ships_data[0])
+        ships_count = len(ship_data[0])
 
         # Apply scaling so that everything fits on the screen
-        scale = 2
+        scale = 3
 
         number_plane = NumberPlane(background_line_style={
             "stroke_color": BLUE,
@@ -142,11 +142,11 @@ class PartN(Slide):
         })
         self.add(number_plane)
 
-        colors = [BLUE, GRAY, RED, YELLOW, PURPLE]
+        colors = [RED]
         dots = []
         for i in range(bodies_count):
             color = colors[i % len(colors)]
-            dots.append(Dot(color=color).set_x(bodies_data[0][i][0] * scale).set_y(bodies_data[0][i][1] * scale))
+            dots.append(Dot(color=color, point=[bodies_data[0,i,0] * scale, bodies_data[0,i,1] * scale, 0])) # type: ignore
 
         self.add(*dots)
 
@@ -154,30 +154,38 @@ class PartN(Slide):
 
         # Add ships
         ship_dots = []
-        ship_colors = [BLUE]
         for i in range(ships_count):
-            color = ship_colors[i % len(ship_colors)]
-            ship_dots.append(Dot(color=color).set_x(ships_data[0][i][0] * scale).set_y(ships_data[0][i][1] * scale))
-        ship_traces = []
-        for i in range(ships_count):
-            color = WHITE
-            ship_traces.append(TracedPath(ship_dots[i].get_center, stroke_color=color, dissipating_time=0.3))
+            point = Dot(point=[ship_data[0,i,0] * scale, ship_data[0,i,1] * scale, 0], color=WHITE, radius=0.01)
+            # ship_dots.append(Dot(color=WHITE, radius=0.02, point=[ships_data[0,i,0] * scale, ships_data[0,i,1] * scale, 0])) # type: ignore
+            ship_dots.append(point)
 
-        self.add(*ship_dots)
-        self.add(*ship_traces)
+        # self.add(*ship_dots)
+
+        ship_dots = TrueDot(center=ORIGIN, color=WHITE)
+        ship_dots.clear_points()
+        ship_points = np.pad(ship_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
+        ship_dots.add_points(ship_points)
+
+        self.add(ship_dots)
 
         self.next_slide()
 
         time_step = ValueTracker(0)
         def update(data, n):
             def f(mob):
-                coords = data[int((len(data) - 1) * time_step.get_value())][n] * scale
+                coords = data[int((len(data) - 1) * time_step.get_value()), n] * scale
                 mob.move_to((coords[0], coords[1], 0))
             return f
         for i in range(bodies_count):
             dots[i].add_updater(update(bodies_data, i))
-        for i in range(ships_count):
-            ship_dots[i].add_updater(update(ships_data, i))
+        # for i in range(ships_count):
+        #     ship_dots[i].add_updater(update(ship_data, i))
+
+        def update_ships(mob):
+            ship_points = np.pad(ship_data[int((len(ship_data) - 1) * time_step.get_value())] * scale, ((0, 0), (0, 1)), mode="constant")
+            mob.clear_points()
+            mob.add_points(ship_points)
+        ship_dots.add_updater(update_ships)
 
 
         self.play(time_step.animate.set_value(1), run_time=15, rate_func=linear)

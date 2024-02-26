@@ -1,10 +1,10 @@
-use ndarray::{s, Array, Array1, Array2, Array3, ArrayView1, ArrayView2, ArrayView3, Axis};
+use ndarray::{s, Array, Array2, Array3, ArrayView1, ArrayView2, ArrayView3, Axis};
 
 /// Trace all the bodies in the simulation and save the results of their positions.
-pub struct TracePlanets {
-    pub masses: Array1<f64>,
-    pub positions: Array2<f64>,
-    pub velocities: Array2<f64>,
+pub struct TracePlanets<'a> {
+    pub masses: ArrayView1<'a, f64>,
+    pub positions: ArrayView2<'a, f64>,
+    pub velocities: ArrayView2<'a, f64>,
     pub dt: f64,
     pub time_steps: usize,
 }
@@ -12,14 +12,17 @@ pub struct TracePlanets {
 pub fn trace_planets(opts: TracePlanets) -> Array3<f64> {
     let TracePlanets {
         masses,
-        mut positions,
-        mut velocities,
+        positions,
+        velocities,
         dt,
         time_steps,
     } = opts;
     let n = masses.len();
     assert_eq!(positions.shape(), [n, 2]);
     assert_eq!(velocities.shape(), [n, 2]);
+
+    let mut positions = positions.to_owned();
+    let mut velocities = velocities.to_owned();
 
     let mut positions_at_t = Array3::zeros((0, n, 2));
     for _ in 0..time_steps {
@@ -57,6 +60,8 @@ pub fn trace_ships(opts: TraceShips) -> Array3<f64> {
     let n = ship_positions.len_of(Axis(0));
     assert_eq!(ship_positions.shape(), [n, 2]);
     assert_eq!(ship_velocities.shape(), [n, 2]);
+
+    log::info!("tracing {n} ships for {time_steps} time steps");
 
     let mut ship_positions = ship_positions.to_owned();
     let mut ship_velocities = ship_velocities.to_owned();

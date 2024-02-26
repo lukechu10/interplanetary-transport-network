@@ -8,20 +8,22 @@
 
 You are currently in a spaceship orbiting around Moon. How do you get back home? After all, there are an infinite number of different trajectories you could take, each one requiring more or less fuel and more or less time. How do we know which one to pick?
 
-The answer should be pretty easy right? First, fire prograde relative to the moon to reduce your speed relative to the Earth. And then, as you approach Earth, fire retrograde again to get into Low Earth Orbit. Finally, land! This is the Hoffmann transfer which is supposed to be the most efficient transfer orbit.
+The answer should be pretty easy right? First, fire prograde relative to the moon to reduce your speed relative to the Earth. And then, as you approach Earth, fire retrograde again to get into Low Earth Orbit. Finally, land! This is the Hohmann transfer which is supposed to be the most efficient transfer orbit.
 
-But your fuel is running precariously low and you realise that you won't actually have enough fuel to perform the final burn to get into Low Earth Orbit. What can you do insted?
+But your fuel is running precariously low and you realise that you won't actually have enough fuel to perform the final burn to get into Low Earth Orbit. What can you do instead?
 
-To figure this out, we will need to be able to predict the future. We will start by building a tracer and use many tools such as phase space, Lagrange points, stable and unsatble manifolds to find out the most efficient way of getting back home.
+To figure this out, we will need to be able to predict the future. We will start by building a tracer and use many tools such as phase space, Lagrange points, stable and unstable manifolds to find out the most efficient way of getting back home.
 
 ## 1. Building a tracer
+
+<!-- TODO: Decide if this section is really necessary -->
 
 ### 1.a.
 
 > Building a tracer
 > \_Scene with four static masses. Animate changing trajectories while varying initial conditions.
 
-But first, let's build a tracer. What this does is simple. Simulate the tracjectories of a spacecraft under influence of some other masses.
+But first, let's build a tracer. What this does is simple. Simulate the trajectories of a spacecraft under influence of some other masses.
 
 However, to find the right path, we must simulate millions and millions of ships to see if anyone gets to our final destination. But simulating millions of bodies all at the same time is clearly intractable. It would take forever for the computation to finish.
 
@@ -41,27 +43,39 @@ So it sounds pretty simple right? Fire off a bunch of spaceships and see which o
 
 ## 2. Phase space
 
+<!-- TODO: This section goes with the same comment as the previous section -->
+
 ### 2.a. Phase space diagram with clouds for probability
 
 ### 2.b. Tracing boundaries
 
 ## 3. Earth-Moon system - 3 body problem
 
-### 3.a. Simulating trajectories from Earth to Moon. Hohhman transfer. Ballistic capture.
+### 3.a. Simulating trajectories from Earth to Moon. Hohmann transfer. Ballistic capture.
 
-### 3.b. Inertial and non-inertial frames.
+Let's get from Low Earth Orbit to the Moon. How efficient is our Hohmann transfer? We'll, we need to do at least two burns, one to get away from Earth, another to slow down once we get to the Moon. Can we do better?
 
-### 3.c. Co-rotating frame. Fictitious forces. Effective potential.
+Here, I am shooting out many spaceships starting from Low Earth Orbit with varying initial velocities. Every time one of these lines intersect with Moon, we get a possible route. As you can see, there are many different possible routes to get to the Moon. But focus in particular on these ones. These trajectories first move away from Moon, but then as they are pulled back by the Earth, they get captured ballistically by Moon. There is no need for a second burn to slow down!
 
-### 3.d. Lagrange points. In particular, L1 and L2.
+How can we explain this?
 
 ## 4. Manifolds
 
 ### 4.a. Stable and unstable manifolds in a simple 1D bump potential system.
 
+To answer this question, let us return back to our phase space diagrams. Imagine a simple system with a bump potential. As we fire some spaceships into this potential, we can trace out their paths in phase space.
+
+In particular, we can see that there is a specific point in phase space which is impossible to get to unless we start there. That is, if we stay motionless on the top of the hill. In phase space, this is an equilibrium point. Any object near this point will tend to fall off this point. We can therefore draw unstable manifolds through this point, describing the paths that lead away from this point. Similarly, we can draw stable manifolds that lead toward this point. These are points in phase space that end up at the equilibrium point, although it would take infinite time for it to do so.
+
 ### 4.b. Manifolds for Lagrange points.
 
+What does this have to do with our problem of getting to the Moon? Well, we've seen that in a 3 body problem, there are certain points known as Lagrange points which are points of equilibrium. In fact, we can even have halo orbits around these points. So this means we can have stable and unstable manifolds that lead to these halo orbits. This results in stable and unstable manifolds that look like giant tubes floating in space.
+
 ### 4.c. Hopping manifolds from Earth to Moon.
+
+For the Sun-Earth 3 body problem, we have these stable and unstable manifolds. Our ballistic trajectory starts out by following the unstable manifold tube out towards the Sun. However, because we have timed it just right, the tube intersects with the stable manifold of the Earth-Moon sub-system. We therefore go from the unstable manifold to the stable manifold which ultimately leads us to Moon.
+
+This provides us a with a general idea of how to navigate efficiently in space. Hopping manifolds. We get on an unstable manifold to leave our initial planet and wait until it intersects with the stable manifold of our destination.
 
 ## 5. Interplanetary Transport Network
 
@@ -70,3 +84,8 @@ So it sounds pretty simple right? Fire off a bunch of spaceships and see which o
 ### 5.b. The interplanetary transport network.
 
 ## Conclusion
+
+## References
+
+braintruffle. (2024, January 25). Master the complexity of spaceflight. YouTube. https://www.youtube.com/watch?v=dhYqflvJMXc
+Lo, Martin. (2002). The InterPlanetary Superhighway and the Origins Program. 7. 7-3543 . 10.1109/AERO.2002.1035332.
