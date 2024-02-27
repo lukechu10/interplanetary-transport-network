@@ -4,7 +4,7 @@ use ndarray_npy::write_npy;
 
 pub fn start() {
     // Units are c * secs.
-    let total_time = 10.;
+    let total_time = 20.;
     let dt = 0.0004;
     let time_steps = (total_time / dt) as usize;
 
@@ -49,9 +49,9 @@ pub fn start() {
     // FIXME: The values below are actually incorrect because of numerical rounding errors.
     // However, they give the correct qualitative behaviour. To fix this, we should introduce
     // variable time-stepping and simulate with smaller time step at the start.
-    let min_v = leo_v * 1.2;
+    let min_v = leo_v * 1.395;
     // let max_v = leo_v * 1.41;
-    let max_v = leo_v * 1.4;
+    let max_v = leo_v * 1.405;
 
     let ship_velocities = Array2::from_shape_fn((num_ships, 2), |(i, j)| {
         let velocity_group = i / num_ships_per_velocity;
