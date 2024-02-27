@@ -225,8 +225,8 @@ class PotentialHill(Slide):
             y_length=5
         )
         group.add(physical_space, phase_space).arrange(RIGHT)
-        physical_space_text = Text("Physical space").next_to(physical_space, DOWN)
-        phase_space_text = Text("Phase space").next_to(phase_space, DOWN)
+        physical_space_title = Text("Physical space").next_to(physical_space, DOWN)
+        phase_space_title = Text("Phase space").next_to(phase_space, DOWN)
 
         physical_labels = physical_space.get_axis_labels(Tex("x"), Tex("U"))
         phase_space_labels = phase_space.get_axis_labels(Tex("x"), Tex("v"))
@@ -242,17 +242,18 @@ class PotentialHill(Slide):
         u_curve = physical_space.plot(U, color=RED)
         area = physical_space.get_area(u_curve, (0, 10), color=RED, fill_opacity=0.5)
 
-        self.play(Create(physical_space), Create(physical_labels), Write(physical_space_text))
-        self.next_slide()
-
+        self.play(Create(physical_space), Create(physical_labels), Write(physical_space_title))
         self.play(Create(u_curve), Create(area))
+        self.wait(0.1)
+
         self.next_slide()
 
-        self.play(Create(phase_space), Create(phase_space_labels), Write(phase_space_text))
+        self.play(Create(phase_space), Create(phase_space_labels), Write(phase_space_title))
+        self.wait(0.1)
+        self.next_slide()
 
         # Shoot some rockets
-
-        def shoot_rocket(x0: float, v0: float, t: ValueTracker) -> Dot:
+        def shoot_rocket(x0: float, v0: float, t: ValueTracker, trace_color = LIMEGREEN) -> Dot:
             """
             Takes initial position and total energy and launches a rocket.
             Returns the phase space rocket dot.
@@ -261,7 +262,7 @@ class PotentialHill(Slide):
             phase_space_rocket = Dot(point=phase_space.c2p(x0, v0))
             self.add(physical_rocket, phase_space_rocket)
 
-            phase_trace = TracedPath(phase_space_rocket.get_center, stroke_color=LIMEGREEN, stroke_width=4)
+            phase_trace = TracedPath(phase_space_rocket.get_center, stroke_color=trace_color, stroke_width=4)
             self.add(phase_trace)
 
             def physical_rocket_update(mob):
@@ -298,24 +299,26 @@ class PotentialHill(Slide):
         # First from the left.
         t = ValueTracker(0)
         rockets = []
-        for H in np.arange(0.25, 2, 0.3):
+        H_values = [0.1, 0.25, 0.55, 0.85, 1.15, 1.45, 1.75, 2.05]
+        for H in H_values:
             v0 = np.sqrt(2 * H - 2 * U(0))
             rockets.append(shoot_rocket(0, v0, t))
-        self.play(t.animate.set_value(21), run_time=3, rate_func=linear)
+        self.play(t.animate.set_value(15), run_time=6, rate_func=linear)
         self.play(*[FadeOut(rocket, run_time=0.2) for rocket in rockets])
 
         # Then from the right.
+        t.set_value(0)
         rockets = []
-        for H in np.arange(0.25, 2, 0.3):
+        for H in H_values:
             v0 = -np.sqrt(2 * H - 2 * U(10))
             rockets.append(shoot_rocket(10, v0, t))
-        self.play(t.animate.set_value(42), run_time=3, rate_func=linear)
+        self.play(t.animate.set_value(15), run_time=6, rate_func=linear)
         self.play(*[FadeOut(rocket, run_time=0.2) for rocket in rockets])
 
         self.next_slide()
 
         # Equilibrium point
-        equilibrium = Dot(point=phase_space.c2p(x0, 0), color=GREEN)
+        equilibrium = Dot(point=phase_space.c2p(x0, 0), color=WHITE)
         label = Text("Equilibrium", font_size=16).next_to(equilibrium, DOWN)
 
         self.add(equilibrium)
@@ -334,9 +337,25 @@ class PotentialHill(Slide):
             else:
                 return -np.sqrt(2 - 2 * U(x))
         stable = phase_space.plot(stable_f, color=BLUE)
-        unstable = phase_space.plot(lambda x: -stable_f(x), color=YELLOW)
+        unstable = phase_space.plot(lambda x: -stable_f(x), color=RED)
 
-        self.play(Create(stable), Create(unstable))
+        legend = VGroup(
+            Text("Stable", font_size=18, color=BLUE),
+            Text("Unstable", font_size=18, color=RED),
+        )
+        legend.arrange(RIGHT, buff=1).next_to(phase_space_title, UP)
+
+        self.play(Create(stable), Create(unstable), Write(legend))
+        self.next_slide()
+
+        # Shoot two rockets just above and below stable manifold.
+        t.set_value(0)
+        rockets = []
+        for H in [0.85, 1.15]:
+            v0 = np.sqrt(2 * H - 2 * U(0))
+            rockets.append(shoot_rocket(0, v0, t, trace_color=WHITE))
+        self.play(t.animate.set_value(10), run_time=4, rate_func=linear)
+        self.play(*[FadeOut(rocket, run_time=0.2) for rocket in rockets])
 
         self.interactive_embed()
 
