@@ -10,4 +10,11 @@ build-image:
 	manim -q$(q) slides.py $(slide) -s
 
 build-slides-html:
-	manim-slides convert Part0 EffectivePotential PartN dist/index.html
+	manim-slides convert \
+		TitleSlide \
+		BuildingATracer \
+		ReducedNBodyProblem \
+		EffectivePotential \
+		PartN \
+		References \
+		dist/index.html

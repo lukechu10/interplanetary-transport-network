@@ -33,14 +33,6 @@ Instead, we use an approximation, and an extremely good one too. We assume that 
 
 Whereas before, we were trying to solve an (n + m) body problem where n is the number of planets and m the number of spaceships, we are now solving an n-body problem and m number times (n + 1)-body problems. Much better!
 
-<!-- TODO: reword above paragraph -->
-
-### 1.c. Simulation Resolution - Building a probability tracer
-
-> \_Slide with an animation of shooting a packet swinging-by a planet. Show that out going packet no longer has an uniform distribution.
-
-So it sounds pretty simple right? Fire off a bunch of spaceships and see which one gets to our destination. However, this approach comes with a problem. Resolution. TODO
-
 ## 2. Phase space
 
 <!-- TODO: This section goes with the same comment as the previous section -->
