@@ -10,11 +10,12 @@ build-image:
 	manim -q$(q) slides.py $(slide) -s
 
 build-slides-html:
-	manim-slides convert \
+	manim-slides convert --use-template template.html \
 		TitleSlide \
 		BuildingATracer \
 		ReducedNBodyProblem \
+		LeoToMoon \
 		EffectivePotential \
-		PartN \
+		PotentialHill \
 		References \
 		dist/index.html
