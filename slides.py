@@ -1,4 +1,3 @@
-from cloup import group
 from manim.utils.color.XKCD import LIMEGREEN
 import numpy as np
 
@@ -25,6 +24,13 @@ class TitleSlide(Slide):
         self.play(FadeOut(title), FadeOut(author), FadeOut(date))
         self.wait()
 
+class BuildingATracer(Slide):
+    def construct(self):
+        title = Text("Building a tracer")
+        todo = Text("TODO: add content").next_to(title, DOWN)
+        self.play(Write(title), Write(todo))
+        self.wait()
+
 class ReducedNBodyProblem(Slide):
     def construct(self):
         table = Table([
@@ -36,13 +42,6 @@ class ReducedNBodyProblem(Slide):
         self.play(Write(table))
         todo = Text("TODO: add animation").next_to(table, DOWN)
         self.play(Write(todo))
-        self.wait()
-
-class BuildingATracer(Slide):
-    def construct(self):
-        title = Text("Building a tracer")
-        todo = Text("TODO: add content").next_to(title, DOWN)
-        self.play(Write(title), Write(todo))
         self.wait()
 
 class LeoToMoon(Slide):
@@ -137,7 +136,7 @@ class EffectivePotential(ThreeDSlide):
         )
 
     def construct_U_grav(self):
-        self.U_grav_eqn = MathTex(r"U_{g} = -\frac{G m_E}{r_E} - \frac{G m_M}{r_M}").to_corner(UL)
+        self.U_grav_eqn = MathTex(r"U_{g} = -G\frac{m_E}{r_E} - G\frac{m_M}{r_M}").to_corner(UL)
         self.add_fixed_in_frame_mobjects(self.U_grav_eqn)
 
         self.U_grav_surface = OpenGLSurface(
@@ -151,7 +150,7 @@ class EffectivePotential(ThreeDSlide):
         self.play(Create(self.U_grav_surface), Write(self.U_grav_eqn))
     
     def construct_U_centrifugal(self):
-        self.U_centrifugal_eqn = MathTex(r"U_{c} = -\frac{1}{2} \omega^2 r").next_to(self.U_grav_eqn, RIGHT).shift(RIGHT)
+        self.U_centrifugal_eqn = MathTex(r"U_{c} = -\frac{1}{2} \omega^2 r^2").next_to(self.U_grav_eqn, RIGHT).shift(RIGHT)
         self.add_fixed_in_frame_mobjects(self.U_centrifugal_eqn)
 
         self.U_centrifugal_surface = OpenGLSurface(
@@ -340,8 +339,8 @@ class PotentialHill(Slide):
         unstable = phase_space.plot(lambda x: -stable_f(x), color=RED)
 
         legend = VGroup(
-            Text("Stable", font_size=18, color=BLUE),
-            Text("Unstable", font_size=18, color=RED),
+            Text("Stable", font_size=22, color=BLUE),
+            Text("Unstable", font_size=22, color=RED),
         )
         legend.arrange(RIGHT, buff=1).next_to(phase_space_title, UP)
 
@@ -359,14 +358,36 @@ class PotentialHill(Slide):
 
         self.interactive_embed()
 
+class LagrangePoints(Slide):
+    def construct(self):
+        title = Text("Lagrange Points")
+        self.play(Write(title))
+        self.wait()
+        self.interactive_embed()
+
+class Manifolds3Body(ThreeDSlide):
+    def construct(self):
+        self.add(Text("Stable and Unstable manifolds in the restricted 3-body problem\nTODO: make animations for this", font_size=15))
+        self.wait()
+        self.interactive_embed()
+
+class InterplanetaryTransportNetwork(Slide):
+    def construct(self):
+        title = Text("Interplanetary Transport Network")
+        todo = Text("TODO: add content").next_to(title, DOWN)
+        self.play(Write(title), Write(todo))
+        self.wait()
+        self.interactive_embed()
+
 class References(Slide):
     def construct(self):
         vg = VGroup()
-        title = Text("References").scale(0.7)
+        title = Text("References", font_size=24)
         references = Text('\n'.join([
-            "braintruffle. (2024, January 25). Master the complexity of spaceflight. YouTube. https://www.youtube.com/watch?v=dhYqflvJMXc",
-            "Lo, Martin. (2002). The InterPlanetary Superhighway and the Origins Program. 7. 7-3543 . 10.1109/AERO.2002.1035332.",
-        ]), line_spacing=1).scale(0.3)
+            "[1] braintruffle. (2024, January 25). Master the complexity of spaceflight. YouTube. https://www.youtube.com/watch?v=dhYqflvJMXc",
+            "[2] Howell, K. C., Beckman, M., Patterson, C., & Folta, D. (2006). Representations of invariant manifolds for applications in three-body systems.\n\tThe Journal of the Astronautical Sciences, 54(1), 69–93. https://doi.org/10.1007/bf03256477",
+            "[3] Lo, Martin. (2002). The InterPlanetary Superhighway and the Origins Program. 7. 7-3543 . 10.1109/AERO.2002.1035332.",
+        ]), line_spacing=1, font_size=14)
         vg.add(title, references)
         vg.arrange(DOWN).align_on_border(LEFT)
         self.play(Write(vg))

@@ -79,5 +79,4 @@ This provides us a with a general idea of how to navigate efficiently in space. 
 
 ## References
 
-braintruffle. (2024, January 25). Master the complexity of spaceflight. YouTube. https://www.youtube.com/watch?v=dhYqflvJMXc
-Lo, Martin. (2002). The InterPlanetary Superhighway and the Origins Program. 7. 7-3543 . 10.1109/AERO.2002.1035332.
+See slides.

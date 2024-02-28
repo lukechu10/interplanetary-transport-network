@@ -17,5 +17,8 @@ build-slides-html:
 		LeoToMoon \
 		EffectivePotential \
 		PotentialHill \
+		LagrangePoints \
+		Manifolds3Body \
+		InterplanetaryTransportNetwork \
 		References \
 		dist/index.html
