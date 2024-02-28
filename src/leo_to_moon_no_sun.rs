@@ -81,6 +81,6 @@ pub fn start() {
     log::info!("tracing ships");
     let ship_positions = trace_ships(opts);
 
-    write_npy("data/part1b_bodies.npy", &mass_positions_at_t).unwrap();
-    write_npy("data/part1b_ships.npy", &ship_positions).unwrap();
+    write_npy("data/leo_to_moon_no_sun_bodies.npy", &mass_positions_at_t).unwrap();
+    write_npy("data/leo_to_moon_no_sun_ships.npy", &ship_positions).unwrap();
 }

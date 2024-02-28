@@ -148,20 +148,31 @@ class ReducedNBodyProblem(Slide):
 
 class LeoToMoon(Slide):
     def construct(self):
-        bodies_data = np.load("data/part1b_bodies.npy")
-        ship_data = np.load("data/part1b_ships.npy")
-        bodies_count = len(bodies_data[0])
+        bodies_data = np.load("data/leo_to_moon_bodies.npy")
+        ship_data = np.load("data/leo_to_moon_ships.npy")
+        time_steps = bodies_data.shape[0]
+        assert ship_data.shape[0] == time_steps, "ship data and bodies data should have the same number of time steps"
+        bodies_count = bodies_data.shape[1]
+
+
+        # Transform positions to (non-corotating) Earth frame.
+        earth_pos = bodies_data[:, 1].reshape((time_steps, 1, 2))
+        ship_data -= earth_pos
+        bodies_data -= earth_pos
+        # print(ship_data)
 
         # Apply scaling so that everything fits on the screen
         scale = 3
 
-        colors = [RED]
-        dots = []
+        colors = [YELLOW, BLUE, GRAY]
+        body_dots = []
         for i in range(bodies_count):
             color = colors[i % len(colors)]
-            dots.append(Dot(color=color, point=[bodies_data[0,i,0] * scale, bodies_data[0,i,1] * scale, 0])) # type: ignore
+            body_dots.append(Dot(color=color, point=[bodies_data[0,i,0] * scale, bodies_data[0,i,1] * scale, 0])) # type: ignore
 
-        self.add(*dots)
+        self.add(*body_dots)
+
+        self.wait(0.1)
 
         self.next_slide()
 
@@ -173,6 +184,7 @@ class LeoToMoon(Slide):
         ship_dots.set_color(WHITE)
 
         self.add(ship_dots)
+        self.wait(0.1)
 
         self.next_slide()
 
@@ -183,7 +195,7 @@ class LeoToMoon(Slide):
                 mob.move_to((coords[0], coords[1], 0))
             return f
         for i in range(bodies_count):
-            dots[i].add_updater(update(bodies_data, i))
+            body_dots[i].add_updater(update(bodies_data, i))
 
         def update_ships(mob):
             ship_points = np.pad(ship_data[int((len(ship_data) - 1) * time_step.get_value())] * scale, ((0, 0), (0, 1)), mode="constant")
@@ -256,7 +268,8 @@ class EffectivePotential(ThreeDSlide):
             resolution=(64, 64),
             opacity=0.5,
         )
-        self.play(Uncreate(self.U_grav_surface), Create(self.U_centrifugal_surface), Write(self.U_centrifugal_eqn))
+        self.play(Uncreate(self.U_grav_surface))
+        self.play(Create(self.U_centrifugal_surface), Write(self.U_centrifugal_eqn))
         self.wait(0.1)
 
     def construct_U_effective(self):

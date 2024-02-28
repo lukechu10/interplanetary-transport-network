@@ -10,13 +10,26 @@ pub fn start() {
 
     log::info!("dt = {dt}, time steps = {time_steps}");
 
-    // Earth-Moon system.
+    // Sun-Earth-Moon system.
+    let m0 = 333000.0;
     let m1 = 1.;
     let m2 = 0.0123;
-    let masses = array![m1, m2];
+    // Sun-Earth distance in units of Earth-Moon distance.
+    let r1 = 385.5;
+    // Earth velocity relative to Sun.
+    let v1 = (m0 as f64 / r1).sqrt();
+
+    let masses = array![m0, m1, m2];
+    // Reduced mass for Earth-Moon system.
     let mu = m1 * m2 / (m1 + m2);
-    let mass_positions = array![[-mu, 0.], [1. - mu, 0.]];
-    let mass_velocities = array![[0., -m2 / (m1 + m2)], [0., m1 / (m1 + m2)]];
+
+    // Moon starts on opposite side of Sun from Earth.
+    let mass_positions = array![[0., 0.], [r1 - mu, 0.], [r1 + 1. - mu, 0.]];
+    let mass_velocities = array![
+        [0., 0.],
+        [0., v1 - m2 / (m1 + m2)],
+        [0., v1 + m1 / (m1 + m2)]
+    ];
 
     let opts = TracePlanets {
         masses: masses.view(),
@@ -40,9 +53,9 @@ pub fn start() {
     let ship_positions = Array2::from_shape_fn((num_ships, 2), |(i, j)| {
         let theta = 2. * std::f64::consts::PI * i as f64 / num_ships_per_velocity as f64;
         if j == 0 {
-            leo_r * theta.cos() + mass_positions[[0, 0]]
+            leo_r * theta.cos() + mass_positions[[1, 0]]
         } else {
-            leo_r * theta.sin() + mass_positions[[0, 1]]
+            leo_r * theta.sin() + mass_positions[[1, 1]]
         }
     });
     let leo_v = (m1 / leo_r).sqrt();
@@ -63,9 +76,9 @@ pub fn start() {
         let velocity = min_v + (max_v - min_v) * velocity_multiplier;
 
         if j == 0 {
-            -velocity * theta.sin() + mass_velocities[[0, 0]]
+            -velocity * theta.sin() + mass_velocities[[1, 0]]
         } else {
-            velocity * theta.cos() + mass_velocities[[0, 1]]
+            velocity * theta.cos() + mass_velocities[[1, 1]]
         }
     });
 
@@ -81,6 +94,6 @@ pub fn start() {
     log::info!("tracing ships");
     let ship_positions = trace_ships(opts);
 
-    write_npy("data/part1b_bodies.npy", &mass_positions_at_t).unwrap();
-    write_npy("data/part1b_ships.npy", &ship_positions).unwrap();
+    write_npy("data/leo_to_moon_bodies.npy", &mass_positions_at_t).unwrap();
+    write_npy("data/leo_to_moon_ships.npy", &ship_positions).unwrap();
 }
