@@ -13,6 +13,8 @@ build-slides-html:
 	manim-slides convert --use-template template.html \
 		TitleSlide \
 		BuildingATracer \
+		SinglePlanet \
+		MultiPlanet \
 		ReducedNBodyProblem \
 		LeoToMoon \
 		EffectivePotential \
