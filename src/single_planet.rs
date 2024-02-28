@@ -42,7 +42,7 @@ pub fn start() {
     write_npy("data/single_planet_bodies.npy", &mass_positions_at_t).unwrap();
     write_npy("data/single_planet_ships.npy", &ship_positions).unwrap();
     write_npy(
-        "data/single_planet_ship_initial_velocities.npy",
+        "data/single_planet_ships_initial_velocities.npy",
         &ship_velocites,
     )
     .unwrap();

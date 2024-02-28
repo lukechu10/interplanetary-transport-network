@@ -46,7 +46,7 @@ class SinglePlanet(Slide):
 
         bodies_data = np.load("data/single_planet_bodies.npy")
         ships_data = np.load("data/single_planet_ships.npy")
-        ships_velocity_data = np.load("data/single_planet_ship_initial_velocities.npy")
+        ships_velocity_data = np.load("data/single_planet_ships_initial_velocities.npy")
         assert bodies_data.shape[1] == 1, "should only have one planet for this slide"
 
         planet = Dot(point=axes.c2p(*bodies_data[0,0]), color=RED, radius=0.2)
@@ -54,6 +54,7 @@ class SinglePlanet(Slide):
         
         ship_initial = Dot(point=axes.c2p(*ships_data[0,0], 0), color=WHITE, radius=0.1)
         self.play(Create(ship_initial))
+        self.wait(0.1)
         self.next_slide()
 
         v_initial_text = Text(f"v = {ships_velocity_data[0][1]}", font_size=20).next_to(ship_initial, RIGHT)
@@ -82,6 +83,53 @@ class SinglePlanet(Slide):
 
 class MultiPlanet(Slide):
     def construct(self):
+        axes = NumberPlane(
+            x_range=[-3, 3],
+            y_range=[-3, 3],
+            x_length=8,
+            y_length=8,
+            background_line_style={
+                "stroke_color": BLUE,
+                "stroke_width": 3,
+                "stroke_opacity": 0.5,
+            },
+        )
+
+        bodies_data = np.load("data/multi_planet_bodies.npy")
+        ships_data = np.load("data/multi_planet_ships.npy")
+        ships_velocity_data = np.load("data/multi_planet_ships_initial_velocities.npy")
+        assert bodies_data.shape[1] == 3, "should only have 3 planets for this slide"
+
+        for i in range(bodies_data.shape[1]):
+            planet = Dot(point=axes.c2p(*bodies_data[0,i]), color=RED, radius=0.2)
+            self.add(planet)
+        
+        ship_initial = Dot(point=axes.c2p(*ships_data[0,0], 0), color=WHITE, radius=0.1)
+        self.play(Create(ship_initial))
+        self.wait(0.1)
+        self.next_slide()
+
+        v_initial_text = Text(f"v = {ships_velocity_data[0][1]}", font_size=20).next_to(ship_initial, RIGHT)
+        # Push off!
+        def pos(t: float, ship_index: int = 0):
+            time_step = int(t * ships_data.shape[0])
+            return axes.c2p(*ships_data[time_step, ship_index], 0)
+        func = ParametricFunction(pos, t_range=[0.0, 0.9]) # type: ignore
+
+        self.play(Write(v_initial_text), Create(func, run_time=3))
+        self.next_slide()
+
+        # Vary the velocity now.
+        ship_index = ValueTracker(0)
+        v_initial_text.add_updater(
+            lambda m: m.become(Text(f"v = {ships_velocity_data[int(ship_index.get_value())][1]:.2f}", font_size=20)).next_to(ship_initial, RIGHT), # type: ignore
+        )
+        func.add_updater(
+            lambda m: m.become(ParametricFunction(lambda t: pos(t, int(ship_index.get_value())), t_range=[0.0, 0.9])), # type: ignore
+        )
+        num_ships = ships_data.shape[1]
+        self.play(ship_index.animate.set_value(num_ships - 1), run_time=10, rate_func=smooth)
+
         self.wait(0.1)
         self.interactive_embed()
 
