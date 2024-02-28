@@ -2,8 +2,8 @@ use log::{error, info};
 use simple_logger::SimpleLogger;
 
 pub mod leo_to_moon;
-pub mod part1;
-pub mod part1a;
+pub mod multi_planet;
+pub mod single_planet;
 pub mod tracer;
 
 fn main() {
@@ -17,8 +17,8 @@ fn main() {
     info!("running simulation `{arg}`");
 
     match arg.as_str() {
-        "part1" => part1::start(),
-        "part1a" => part1a::start(),
+        "single_planet" => single_planet::start(),
+        "multi_planet" => multi_planet::start(),
         "leo_to_moon" => leo_to_moon::start(),
         _ => panic!("unknown argument"),
     }
