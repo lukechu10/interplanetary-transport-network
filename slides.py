@@ -18,10 +18,11 @@ class TitleSlide(Slide):
         date.font_size = 12
 
         self.add(title, author, date)
-        self.wait()
+        self.wait(0.1)
         self.next_slide(auto_next=True)
+
         self.play(FadeOut(title), FadeOut(author), FadeOut(date))
-        self.wait()
+        self.wait(0.1)
 
 class BuildingATracer(Slide):
     def construct(self):
@@ -136,9 +137,8 @@ class ReducedNBodyProblem(Slide):
     def construct(self):
         table = Table([
             ["Full n-body problem", "Reduced n-body problem"],
-            ["2 planets + 10 ships", "2 planets + 10 ships"],
-            ["(12 - 1)! forces", "2 forces + 10 * 2 forces"],
-            ["39916800 forces", "22 forces"],
+            ["3 planets + 1 ship", "3 planets + 1 ship"],
+            ["12 forces", "6 forces + 3 forces"],
         ]).scale(0.5)
         self.play(Write(table))
         self.wait()
