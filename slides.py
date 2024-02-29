@@ -228,7 +228,9 @@ class LeoToMoon(Slide):
             mob.move_to((coords[0], coords[1], 0))
         best_ship_dot.add_updater(update_best_ship) # type: ignore
 
-        self.play(time_step.animate.set_value(1), run_time=20, rate_func=linear)
+        self.play(time_step.animate.set_value(0.05), run_time=4, rate_func=smooth)
+        self.next_slide()
+        self.play(time_step.animate.set_value(1), run_time=20, rate_func=smooth)
         self.interactive_embed()
 
 class EffectivePotential(ThreeDSlide):
