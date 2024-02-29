@@ -10,7 +10,7 @@ from manim_slides.slide import Slide, ThreeDSlide
 
 class TitleSlide(Slide):
     def construct(self):
-        title = Text("Budget-friendly space travel")
+        title = Text("Fuel-efficient space travel")
         author = Text("Luke Chu").next_to(title, DOWN)
         author.font_size = 18
 
@@ -355,7 +355,14 @@ class HaloOrbits(Slide):
         title = Text("Halo Orbits").next_to(image, DOWN) # type: ignore
         self.add(image)
         self.play(Write(title))
-        self.wait()
+        self.wait(0.1)
+        self.next_slide()
+
+        ballistic_capture_image = OpenGLImageMobject("temp_images/BallisticCapture.png")
+        self.remove(image)
+        self.add(ballistic_capture_image)
+        self.wait(0.1)
+
         self.interactive_embed()
 
 class PotentialHill(Slide):
