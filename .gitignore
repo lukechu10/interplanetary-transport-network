@@ -1,10 +1,8 @@
 target/
 __pycache__/
-index_assets/
 media/
 slides/
 data/
-dist/
 .vscode/
 
 perf.data
