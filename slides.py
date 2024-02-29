@@ -19,7 +19,7 @@ class TitleSlide(Slide):
 
         self.add(title, author, date)
         self.wait()
-        self.next_slide()
+        self.next_slide(auto_next=True)
         self.play(FadeOut(title), FadeOut(author), FadeOut(date))
         self.wait()
 
@@ -163,18 +163,19 @@ class LeoToMoon(Slide):
         print("Done!")
 
         # Apply scaling so that everything fits on the screen
-        scale = 3
+        scale = 1
 
         colors = [YELLOW, BLUE, GRAY]
         body_dots = []
         for i in range(bodies_count):
             color = colors[i % len(colors)]
             body_dots.append(Dot(color=color, point=[bodies_data[0,i,0] * scale, bodies_data[0,i,1] * scale, 0])) # type: ignore
-
         self.add(*body_dots)
 
-        self.wait(0.1)
+        l1_circle = Circle(radius=3.902 * scale, color=BLUE)
+        self.add(l1_circle)
 
+        self.wait(0.1)
         self.next_slide()
 
         # Add ships
@@ -183,13 +184,20 @@ class LeoToMoon(Slide):
         ship_points = np.pad(ship_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
         ship_dots.add_points(ship_points)
         ship_dots.set_color(WHITE)
-
         self.add(ship_dots)
-        self.wait(0.1)
 
+        self.wait(0.1)
         self.next_slide()
 
         time_step = ValueTracker(0)
+        
+        best_ship = np.load("data/leo_to_moon_best_ship.npy")[0]
+        best_ship_start = ship_data[0, best_ship]
+        best_ship_dot = Dot(color=LIMEGREEN, point=(best_ship_start[0] * scale, best_ship_start[1] * scale, 0)) # type: ignore
+        best_ship_trace = TracedPath(best_ship_dot.get_center, stroke_color=LIMEGREEN, stroke_width=2)
+
+        self.add(best_ship_trace, best_ship_dot)
+
         def update(data, n):
             def f(mob):
                 coords = data[int((len(data) - 1) * time_step.get_value()), n] * scale
@@ -214,8 +222,13 @@ class LeoToMoon(Slide):
             mob.add_points(ship_points, rgbas=ship_status_colors)
         ship_dots.add_updater(update_ships)
 
+        def update_best_ship(mob: Dot):
+            time_index = int((len(ship_data) - 1) * time_step.get_value())
+            coords = ship_data[time_index, best_ship] * scale
+            mob.move_to((coords[0], coords[1], 0))
+        best_ship_dot.add_updater(update_best_ship) # type: ignore
 
-        self.play(time_step.animate.set_value(1), run_time=25, rate_func=linear)
+        self.play(time_step.animate.set_value(1), run_time=20, rate_func=linear)
         self.interactive_embed()
 
 class EffectivePotential(ThreeDSlide):
@@ -323,6 +336,24 @@ class EffectivePotential(ThreeDSlide):
 
         self.play(*[Create(contour) for contour in contours], FadeOut(self.U_effective_surface))
         
+        self.interactive_embed()
+
+class LagrangePoints(Slide):
+    def construct(self):
+        image = OpenGLImageMobject("temp_images/LagrangePoints.png")
+        title = Text("Lagrange Points").next_to(image, DOWN) # type: ignore
+        self.add(image)
+        self.play(Write(title))
+        self.wait()
+        self.interactive_embed()
+
+class HaloOrbits(Slide):
+    def construct(self):
+        image = OpenGLImageMobject("temp_images/HaloOrbits.png")
+        title = Text("Halo Orbits").next_to(image, DOWN) # type: ignore
+        self.add(image)
+        self.play(Write(title))
+        self.wait()
         self.interactive_embed()
 
 class PotentialHill(Slide):
@@ -476,24 +507,22 @@ class PotentialHill(Slide):
 
         self.interactive_embed()
 
-class LagrangePoints(Slide):
-    def construct(self):
-        title = Text("Lagrange Points")
-        self.play(Write(title))
-        self.wait()
-        self.interactive_embed()
 
 class Manifolds3Body(ThreeDSlide):
     def construct(self):
-        self.add(Text("Stable and Unstable manifolds in the restricted 3-body problem\nTODO: make animations for this", font_size=15))
+        image = OpenGLImageMobject("temp_images/SunEarthStableManifold.png")
+        text = Text("Sun-Earth stable manifolds", font_size=15).next_to(image, DOWN) # type: ignore
+        self.add(image)
+        self.play(Write(text))
         self.wait()
         self.interactive_embed()
 
 class InterplanetaryTransportNetwork(Slide):
     def construct(self):
-        title = Text("Interplanetary Transport Network")
-        todo = Text("TODO: add content").next_to(title, DOWN)
-        self.play(Write(title), Write(todo))
+        image = OpenGLImageMobject("temp_images/HoppingManifolds.png")
+        title = Text("Interplanetary Transport Network").next_to(image, DOWN) # type: ignore
+        self.add(image)
+        self.play(Write(title))
         self.wait()
         self.interactive_embed()
 

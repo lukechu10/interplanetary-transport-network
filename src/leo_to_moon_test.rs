@@ -40,7 +40,7 @@ pub fn start() {
     };
     let mass_positions_at_t = trace_planets(opts);
 
-    let num_ships_per_velocity = 200;
+    let num_ships_per_velocity = 400;
     let num_velocity_groups = 10;
     let num_ships = num_ships_per_velocity * num_velocity_groups;
 
@@ -99,7 +99,6 @@ pub fn start() {
 
     // Moon SOI.
     let r2_zone = 0.167;
-    let r2_zone = r2_zone * 3.0; // HACK: Increase by 3.
 
     // Time until something happens.
     let start_time = 19.0;

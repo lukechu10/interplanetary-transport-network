@@ -4,8 +4,8 @@ use ndarray_npy::write_npy;
 
 pub fn start() {
     // Units are c * secs.
-    let total_time = 20.;
-    let dt = 0.0004;
+    let total_time = 25.;
+    let dt = 0.001;
     let time_steps = (total_time / dt) as usize;
 
     log::info!("dt = {dt}, time steps = {time_steps}");
@@ -40,8 +40,8 @@ pub fn start() {
     };
     let mass_positions_at_t = trace_planets(opts);
 
-    let num_ships_per_velocity = 200;
-    let num_velocity_groups = 6;
+    let num_ships_per_velocity = 400;
+    let num_velocity_groups = 10;
     let num_ships = num_ships_per_velocity * num_velocity_groups;
 
     // Ships start all around LEO.
@@ -62,9 +62,9 @@ pub fn start() {
     // FIXME: The values below are actually incorrect because of numerical rounding errors.
     // However, they give the correct qualitative behaviour. To fix this, we should introduce
     // variable time-stepping and simulate with smaller time step at the start.
-    let min_v = leo_v * 1.395;
+    let min_v = leo_v * 1.3785;
     // let max_v = leo_v * 1.41;
-    let max_v = leo_v * 1.405;
+    let max_v = leo_v * 1.3786;
 
     let ship_velocities = Array2::from_shape_fn((num_ships, 2), |(i, j)| {
         let velocity_group = i / num_ships_per_velocity;
@@ -95,18 +95,20 @@ pub fn start() {
     let ship_positions_at_t = trace_ships(opts);
 
     // Compute ship status at every time step.
-    log::info!("computing ship status");
-    let mut ship_status = Array2::<i8>::zeros((time_steps, num_ships));
+    log::info!("computing ship with smallest relative velocity to Moon");
+    let ship_status = Array2::<u8>::zeros((time_steps, num_ships));
 
-    // Zone in which ships are considerered to have returned to Earth.
-    let r1_zone = 0.2;
     // Moon SOI.
     let r2_zone = 0.167;
 
     // Time until something happens.
-    let start_time = 0.4;
+    let start_time = 19.0;
     let first_time_step = (start_time / dt) as usize;
 
+    let mut smallest_rel_v = f64::MAX;
+    let mut smallest_rel_v_i = 0;
+    let mut smallest_rel_v_time = 0.0;
+    let mut smallest_rel_v_esc = 0.0;
     for t in first_time_step..time_steps {
         for i in 0..num_ships {
             let prev_pos = [
@@ -123,51 +125,62 @@ pub fn start() {
             let mass_prev_pos = mass_positions_at_t.index_axis(Axis(0), t - 1);
             let mass_pos = mass_positions_at_t.index_axis(Axis(0), t);
 
-            let earth_pos = mass_pos.index_axis(Axis(0), 1);
             let moon_pos = mass_pos.index_axis(Axis(0), 2);
 
-            let d1 = ((pos[0] - earth_pos[0]).powi(2) + (pos[1] - earth_pos[1]).powi(2)).sqrt();
             let d2 = ((pos[0] - moon_pos[0]).powi(2) + (pos[1] - moon_pos[1]).powi(2)).sqrt();
 
-            if ship_status[[t - 1, i]] == 0 {
-                if d1 < r1_zone {
-                    // Returned to Earth.
-                    ship_status[[t, i]] = 1;
-                } else if d2 < r2_zone {
-                    // Check relative velocity to moon and see if its smaller than moon's escape
-                    // velocity at that distance.
-                    let esc_v = (2. * m2 / d2).sqrt();
-                    let moon_prev_pos = mass_prev_pos.index_axis(Axis(0), 2);
-                    let moon_v = [
-                        moon_pos[0] - moon_prev_pos[0],
-                        moon_pos[1] - moon_prev_pos[1],
-                    ];
-                    let v_rel = ((v[0] - moon_v[0]).powi(2) + (v[1] - moon_v[1]).powi(2)).sqrt();
+            if d2 < r2_zone {
+                // Check relative velocity to moon and see if its smaller than moon's escape
+                // velocity at that distance.
+                let esc_v = (2. * m2 / d2).sqrt();
+                let moon_prev_pos = mass_prev_pos.index_axis(Axis(0), 2);
+                let moon_v = [
+                    moon_pos[0] - moon_prev_pos[0],
+                    moon_pos[1] - moon_prev_pos[1],
+                ];
+                let v_rel = ((v[0] - moon_v[0]).powi(2) + (v[1] - moon_v[1]).powi(2)).sqrt();
 
-                    if v_rel < esc_v {
-                        // More or less captured by Moon.
-                        ship_status[[t, i]] = 3;
-                        println!("ship {i} ballistically captured by Moon");
-                        println!(
-                            "x_i = ({}, {}), v_i = ({}, {})",
-                            ship_positions[[i, 0]],
-                            ship_positions[[i, 1]],
-                            ship_velocities[[i, 0]],
-                            ship_velocities[[i, 1]]
-                        );
-                    } else {
-                        // Reached Moon flyby.
-                        ship_status[[t, i]] = 2;
-                    }
+                if v_rel < esc_v {
+                    // More or less captured by Moon.
+                    log::info!("ship {i} ballistically captured by Moon");
+                    log::info!(
+                        "x_i = ({}, {}), v_i = ({}, {})",
+                        ship_positions[[i, 0]],
+                        ship_positions[[i, 1]],
+                        ship_velocities[[i, 0]],
+                        ship_velocities[[i, 1]]
+                    );
                 }
-            } else {
-                // Carry forward status.
-                ship_status[[t, i]] = ship_status[[t - 1, i]];
+
+                if v_rel < smallest_rel_v {
+                    smallest_rel_v = v_rel;
+                    smallest_rel_v_i = i;
+                    smallest_rel_v_time = t as f64 * dt;
+                    smallest_rel_v_esc = esc_v;
+                }
             }
         }
     }
 
+    let velocity = [
+        ship_velocities[[smallest_rel_v_i, 0]] - mass_velocities[[1, 0]],
+        ship_velocities[[smallest_rel_v_i, 1]] - mass_velocities[[1, 1]],
+    ];
+    log::info!("smallest rel v = {smallest_rel_v}, i = {smallest_rel_v_i}, after {smallest_rel_v_time} time");
+    log::info!(
+        "x_i = ({}, {}), v_i = ({}, {})",
+        ship_positions[[smallest_rel_v_i, 0]],
+        ship_positions[[smallest_rel_v_i, 1]],
+        velocity[0],
+        velocity[1],
+    );
+    let v_i_norm = (velocity[0].powi(2) + velocity[1].powi(2)).sqrt();
+    log::info!("|v_i| = {v_i_norm}",);
+    log::info!("|v_i| / v_leo = {}", v_i_norm / leo_v);
+    log::info!("escape v for best result: {smallest_rel_v_esc}");
+
     write_npy("data/leo_to_moon_bodies.npy", &mass_positions_at_t).unwrap();
     write_npy("data/leo_to_moon_ships.npy", &ship_positions_at_t).unwrap();
     write_npy("data/leo_to_moon_ships_status.npy", &ship_status).unwrap();
+    write_npy("data/leo_to_moon_best_ship.npy", &array![smallest_rel_v_i as u64]).unwrap();
 }

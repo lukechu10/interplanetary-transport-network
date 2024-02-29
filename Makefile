@@ -18,8 +18,9 @@ build-slides-html:
 		ReducedNBodyProblem \
 		LeoToMoon \
 		EffectivePotential \
-		PotentialHill \
 		LagrangePoints \
+		HaloOrbits \
+		PotentialHill \
 		Manifolds3Body \
 		InterplanetaryTransportNetwork \
 		References \
