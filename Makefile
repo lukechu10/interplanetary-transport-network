@@ -24,4 +24,4 @@ build-slides-html:
 		Manifolds3Body \
 		InterplanetaryTransportNetwork \
 		References \
-		dist/index.html
+		docs/index.html
