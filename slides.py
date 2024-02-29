@@ -1,7 +1,6 @@
-from manim.utils.color.XKCD import LIMEGREEN
 import numpy as np
-
 from manim import *
+from manim.utils.color.XKCD import LIMEGREEN
 from manim.opengl import *
 from manim_slides.slide import Slide, ThreeDSlide
 
@@ -142,24 +141,26 @@ class ReducedNBodyProblem(Slide):
             ["39916800 forces", "22 forces"],
         ]).scale(0.5)
         self.play(Write(table))
-        todo = Text("TODO: add animation").next_to(table, DOWN)
-        self.play(Write(todo))
         self.wait()
 
 class LeoToMoon(Slide):
     def construct(self):
+        print("Loading data")
         bodies_data = np.load("data/leo_to_moon_bodies.npy")
         ship_data = np.load("data/leo_to_moon_ships.npy")
+        ship_status = np.load("data/leo_to_moon_ships_status.npy")
         time_steps = bodies_data.shape[0]
         assert ship_data.shape[0] == time_steps, "ship data and bodies data should have the same number of time steps"
+        assert ship_status.shape[0] == time_steps, "ship status and bodies data should have the same number of time steps"
         bodies_count = bodies_data.shape[1]
 
-
+        print("Transforming to Earth frame")
         # Transform positions to (non-corotating) Earth frame.
         earth_pos = bodies_data[:, 1].reshape((time_steps, 1, 2))
         ship_data -= earth_pos
         bodies_data -= earth_pos
-        # print(ship_data)
+
+        print("Done!")
 
         # Apply scaling so that everything fits on the screen
         scale = 3
@@ -197,11 +198,20 @@ class LeoToMoon(Slide):
         for i in range(bodies_count):
             body_dots[i].add_updater(update(bodies_data, i))
 
-        def update_ships(mob):
-            ship_points = np.pad(ship_data[int((len(ship_data) - 1) * time_step.get_value())] * scale, ((0, 0), (0, 1)), mode="constant")
+        def update_ships(mob: TrueDot):
+            time_index = int((len(ship_data) - 1) * time_step.get_value())
+            ship_points = np.pad(ship_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
+            # Transform ship status to color codes.
+            # 0: default
+            # 1: returned to Earth
+            # 2: reached Moon
+            # 3: captured by Moon
+            colors = list(map(ManimColor.to_rgba, [WHITE, DARK_GRAY, RED, LIMEGREEN]))
+            convert_to_color = np.vectorize(lambda x: colors[x], signature='()->(4)')
+            ship_status_colors = convert_to_color(ship_status[time_index])
+
             mob.clear_points()
-            mob.add_points(ship_points)
-            mob.set_color(WHITE)
+            mob.add_points(ship_points, rgbas=ship_status_colors)
         ship_dots.add_updater(update_ships)
 
 

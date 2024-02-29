@@ -2,6 +2,8 @@ use log::{error, info};
 use simple_logger::SimpleLogger;
 
 pub mod leo_to_moon;
+pub mod leo_to_moon_test;
+pub mod leo_to_moon_compute;
 pub mod leo_to_moon_no_sun;
 pub mod multi_planet;
 pub mod single_planet;
@@ -21,6 +23,8 @@ fn main() {
         "single_planet" => single_planet::start(),
         "multi_planet" => multi_planet::start(),
         "leo_to_moon" => leo_to_moon::start(),
+        "leo_to_moon_test" => leo_to_moon_test::start(),
+        "leo_to_moon_compute" => leo_to_moon_compute::start(),
         "leo_to_moon_no_sun" => leo_to_moon_no_sun::start(),
         _ => panic!("unknown argument"),
     }
