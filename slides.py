@@ -519,7 +519,7 @@ class PotentialHill(Slide):
 
 class Manifolds3Body(ThreeDSlide):
     def construct(self):
-        image = OpenGLImageMobject("temp_images/SunEarthStableManifold.png")
+        image = OpenGLImageMobject("temp_images/IntersectingManifolds.png")
         text = Text("Sun-Earth stable manifolds", font_size=15).next_to(image, DOWN) # type: ignore
         self.add(image)
         self.play(Write(text))
@@ -528,7 +528,7 @@ class Manifolds3Body(ThreeDSlide):
 
 class InterplanetaryTransportNetwork(Slide):
     def construct(self):
-        image = OpenGLImageMobject("temp_images/HoppingManifolds.png")
+        image = OpenGLImageMobject("temp_images/Interplanetary_Superhighway.jpg")
         title = Text("Interplanetary Transport Network").next_to(image, DOWN) # type: ignore
         self.add(image)
         self.play(Write(title))
