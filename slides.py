@@ -336,6 +336,8 @@ class EffectivePotential(ThreeDSlide):
         self.play(Create(dots), Write(labels))
         self.wait(0.1)
 
+        self.l1_point = dots[0] # Save this so that we can zoom in to prepare for next slide.
+
     def construct(self):
         self.construct_axes()
         self.next_slide()
@@ -421,9 +423,9 @@ class HaloOrbits(Slide):
         self.add(*search_traces)
         
         # Add trace on best ship. Simulation is setup so that the best ship is the first one.
-        best_trace = TracedPath(lambda: ship_dots.points[0], stroke_color=LIMEGREEN)
+        best_trace = TracedPath(lambda: ship_dots.points[0], stroke_color=LIMEGREEN, stroke_width=4)
         self.add(best_trace)
-        self.bring_to_back(best_trace)
+        best_trace.set_stroke(opacity=0)
 
         self.wait(0.1)
         self.next_slide()
@@ -443,13 +445,19 @@ class HaloOrbits(Slide):
         self.next_slide()
 
         # Show best ship trace now.
-        self.bring_to_front(best_trace)
+        best_trace.set_stroke(opacity=1)
+        self.wait(0.1)
         self.next_slide()
         
         # Reflect the best path across the y=0 line.
         best_trace_center = best_trace.get_center()
         reflected_best_trace = best_trace.copy().flip(RIGHT).shift(DOWN * best_trace_center[1] * 2)
         self.add(reflected_best_trace)
+        self.wait(0.1)
+
+        halo_orbit_text = Text("Halo Orbit", font_size=30).to_edge(DOWN).shift(RIGHT * 4)
+        self.play(Write(halo_orbit_text))
+
         self.next_slide()
 
         self.remove(*search_traces)
@@ -472,7 +480,7 @@ class HaloOrbits(Slide):
 
         orbit_traces = []
         for i in range(orbit_data.shape[1]):
-            trace = TracedPath(lambda i=i: ship_dots.points[i], stroke_color=LIMEGREEN)
+            trace = TracedPath(lambda i=i: ship_dots.points[i], stroke_color=LIMEGREEN, stroke_width=4)
             orbit_traces.append(trace)
         orbit_traces = VGroup(*orbit_traces)
         self.add(orbit_traces)
@@ -482,6 +490,7 @@ class HaloOrbits(Slide):
         orbit_traces_center = orbit_traces.get_center()
         reflected_orbit_traces = orbit_traces.copy().flip(RIGHT).shift(DOWN * orbit_traces_center[1] * 2)
         self.add(reflected_orbit_traces)
+        self.wait(0.1)
 
         self.interactive_embed()
 

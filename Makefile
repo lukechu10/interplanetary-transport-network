@@ -30,6 +30,7 @@ build-video-all:
 	manim -q$(q) slides.py References --renderer opengl --write_to_movie
 
 build-slides-html:
+	rm -r docs/index_assets/
 	manim-slides convert --use-template template.html \
 		TitleSlide \
 		BuildingATracer \
