@@ -388,12 +388,12 @@ class HaloOrbits(Slide):
         scale = 20
 
         # Add L1 point
-        l1_dot = Dot(point=[0, 0, 0], color=WHITE) # type: ignore
+        l1_dot = Dot(point=(0, 0, 0), color=WHITE)
         l1_label = MathTex("L_1").next_to(l1_dot, DOWN)
         self.add(l1_dot, l1_label)
 
         # Add y=0 line
-        y_line = Line(start=[-8, 0, 0], end=[8, 0, 0], color=WHITE) # type: ignore
+        y_line = Line(start=(-8, 0, 0), end=(8, 0, 0), color=WHITE)
         self.add(y_line)
 
         # Add Moon, Earth points
@@ -455,7 +455,7 @@ class HaloOrbits(Slide):
         self.add(reflected_best_trace)
         self.wait(0.1)
 
-        halo_orbit_text = Text("Halo Orbit", font_size=30).to_edge(DOWN).shift(RIGHT * 4)
+        halo_orbit_text = Text("Halo Orbit (Lyapunov L1)", font_size=30).to_edge(DOWN).shift(RIGHT * 4)
         self.play(Write(halo_orbit_text))
 
         self.next_slide()
