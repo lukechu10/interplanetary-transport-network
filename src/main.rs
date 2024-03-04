@@ -2,6 +2,7 @@ use log::{error, info};
 use simple_logger::SimpleLogger;
 
 pub mod halo_orbits;
+pub mod halo_orbits_compute;
 pub mod leo_to_moon;
 pub mod leo_to_moon_compute;
 pub mod leo_to_moon_no_sun;
@@ -28,6 +29,7 @@ fn main() {
         "leo_to_moon_compute" => leo_to_moon_compute::start(),
         "leo_to_moon_no_sun" => leo_to_moon_no_sun::start(),
         "halo_orbits" => halo_orbits::start(),
+        "halo_orbits_compute" => halo_orbits_compute::start(),
         _ => panic!("unknown argument"),
     }
 }

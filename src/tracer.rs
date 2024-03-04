@@ -60,11 +60,11 @@ where
 /// Parameter passed to the inspect function in [`trace_ships_inspect`].
 pub struct InspectData {
     /// Value of x in the previous time step.
-    pub prev_x: [f64; 2],
+    pub prev_r: [f64; 2],
     /// Value of x in the current time step.
-    pub x: [f64; 2],
+    pub r: [f64; 2],
     /// Index of the ship that is being inspected.
-    pub ship_i: usize,
+    pub i: usize,
 }
 
 pub fn trace_ships_inspect<F, G>(opts: TraceShips<F>, mut inspect: G) -> Array3<f64>
@@ -130,9 +130,9 @@ where
                 ship_position[1] + ship_velocity[1] * dt,
             ];
             inspect(InspectData {
-                prev_x: [ship_position[0], ship_position[1]],
-                x: [new_position[0], new_position[1]],
-                ship_i,
+                prev_r: [ship_position[0], ship_position[1]],
+                r: [new_position[0], new_position[1]],
+                i: ship_i,
             });
             ship_position[0] = new_position[0];
             ship_position[1] = new_position[1];

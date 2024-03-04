@@ -65,8 +65,8 @@ fn fictitious_force_rotating_frame(omega: f64) -> impl Fn([f64; 2], [f64; 2]) ->
 
 pub fn start() {
     // Units are c * secs.
-    let total_time = 3.;
-    let dt = 0.00002;
+    let total_time = 6.;
+    let dt = 0.0001;
     let time_steps = (total_time / dt) as usize;
 
     log::info!("dt = {dt}, time steps = {time_steps}");
@@ -99,14 +99,24 @@ pub fn start() {
         .broadcast((num_ships, 2))
         .unwrap()
         .to_owned();
-    let min_v = 0.0;
-    let max_v = 0.02;
+    let min_v = 0.00832;
+    let max_v = 0.00848;
     let ship_velocities = Array2::from_shape_fn((num_ships, 2), |(i, j)| {
-        let velocity = min_v + (max_v - min_v) * i as f64 / (num_ships as f64 - 1.0);
-        if j == 0 {
-            0.
+        // Make the first ship the best ship.
+        // Other ships are merely for visualisation when we apply small perturbation.
+        if i == 0 {
+            if j == 0 {
+                0.
+            } else {
+                0.00834968
+            }
         } else {
-            velocity
+            let velocity = min_v + (max_v - min_v) * i as f64 / (num_ships as f64 - 2.0);
+            if j == 0 {
+                0.
+            } else {
+                velocity
+            }
         }
     });
 

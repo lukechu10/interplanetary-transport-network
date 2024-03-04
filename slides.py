@@ -377,7 +377,7 @@ class HaloOrbits(Slide):
         mu = 1 * 0.0123 / (1 + 0.0123)
 
         # Apply scaling so that everything fits on the screen
-        scale = 100
+        scale = 300
 
         # Add L1 point
         l1_dot = Dot(point=[0, 0, 0], color=WHITE)
