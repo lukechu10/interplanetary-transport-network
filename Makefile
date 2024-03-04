@@ -23,7 +23,6 @@ build-video-all:
 	manim -q$(q) slides.py ReducedNBodyProblem --renderer opengl --write_to_movie
 	manim -q$(q) slides.py LeoToMoon --renderer opengl --write_to_movie
 	manim -q$(q) slides.py EffectivePotential --renderer opengl --write_to_movie
-	manim -q$(q) slides.py LagrangePoints --renderer opengl --write_to_movie
 	manim -q$(q) slides.py HaloOrbits --renderer opengl --write_to_movie
 	manim -q$(q) slides.py PotentialHill --renderer opengl --write_to_movie
 	manim -q$(q) slides.py Manifolds3Body --renderer opengl --write_to_movie
@@ -39,7 +38,6 @@ build-slides-html:
 		ReducedNBodyProblem \
 		LeoToMoon \
 		EffectivePotential \
-		LagrangePoints \
 		HaloOrbits \
 		PotentialHill \
 		Manifolds3Body \

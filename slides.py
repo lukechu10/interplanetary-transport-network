@@ -283,7 +283,6 @@ class EffectivePotential(ThreeDSlide):
     
     def construct_U_centrifugal(self):
         self.U_centrifugal_eqn = MathTex(r"U_{c} = -\frac{1}{2} \omega^2 r^2").next_to(self.U_grav_eqn, RIGHT).shift(RIGHT)
-        self.add_fixed_in_frame_mobjects(self.U_centrifugal_eqn)
 
         self.U_centrifugal_surface = OpenGLSurface(
             uv_func=lambda u, v: self.axes.c2p(u, v, self.U_centrifugal(u, v)),
@@ -293,7 +292,9 @@ class EffectivePotential(ThreeDSlide):
             resolution=(64, 64),
             opacity=0.5,
         )
+
         self.play(Uncreate(self.U_grav_surface))
+        self.add_fixed_in_frame_mobjects(self.U_centrifugal_eqn)
         self.play(Create(self.U_centrifugal_surface), Write(self.U_centrifugal_eqn))
         self.wait(0.1)
 
@@ -314,6 +315,26 @@ class EffectivePotential(ThreeDSlide):
             ReplacementTransform(self.U_grav_eqn, self.U_effective_eqn),
             FadeOut(self.U_centrifugal_eqn)
         )
+
+    def construct_lagrange_points(self):
+        # Draw Lagrange points.
+        l1_l2_radius = (self.mu / 3) ** (1 / 3)
+        l3_radius = 7 / 12 * self.mu
+        # Approximate positions of L1-L3 assuming that m_earth >> m_moon.
+        lagrange_points = [
+            (self.r_moon[0] - l1_l2_radius, 0, 0),
+            (self.r_moon[0] + l1_l2_radius, 0, 0),
+            (-1 + l3_radius + self.r_earth[0], 0, 0),
+            (self.r_earth[0] + 1 * np.cos(PI / 3), self.r_earth[1] + 1 * np.sin(PI / 3), 0),
+            (self.r_earth[0] + 1 * np.cos(PI / 3), self.r_earth[1] - 1 * np.sin(PI / 3), 0),
+        ]
+        dots = [Dot3D(self.axes.c2p(*point), color=WHITE, radius=0.1) for point in lagrange_points]
+        labels = [MathTex(f"L_{i + 1}").next_to(dot, DOWN) for i, dot in enumerate(dots)]
+        
+        dots = VGroup(*dots)
+        labels = VGroup(*labels)
+        self.play(Create(dots), Write(labels))
+        self.wait(0.1)
 
     def construct(self):
         self.construct_axes()
@@ -337,16 +358,10 @@ class EffectivePotential(ThreeDSlide):
             contours.append(implicit_fn)
 
         self.play(*[Create(contour) for contour in contours], FadeOut(self.U_effective_surface))
-        
-        self.interactive_embed()
+        self.next_slide()
 
-class LagrangePoints(Slide):
-    def construct(self):
-        image = OpenGLImageMobject("temp_images/LagrangePoints.png")
-        title = Text("Lagrange Points").next_to(image, DOWN) # type: ignore
-        self.add(image)
-        self.play(Write(title))
-        self.wait()
+        self.construct_lagrange_points()
+        
         self.interactive_embed()
 
 class HaloOrbits(Slide):
@@ -542,7 +557,8 @@ class References(Slide):
         references = Text('\n'.join([
             "[1] braintruffle. (2024, January 25). Master the complexity of spaceflight. YouTube. https://www.youtube.com/watch?v=dhYqflvJMXc",
             "[2] Howell, K. C., Beckman, M., Patterson, C., & Folta, D. (2006). Representations of invariant manifolds for applications in three-body systems.\n\tThe Journal of the Astronautical Sciences, 54(1), 69–93. https://doi.org/10.1007/bf03256477",
-            "[3] Lo, Martin. (2002). The InterPlanetary Superhighway and the Origins Program. 7. 7-3543 . 10.1109/AERO.2002.1035332.",
+            "[3] Topputo, F. (2016). Fast numerical approximation of invariant manifolds in the circular restricted three-body problem. \n\tCommunications in Nonlinear Science and Numerical Simulation, 32, 89–98. https://doi.org/10.1016/j.cnsns.2015.08.004",
+            "[4] Lo, Martin. (2002). The InterPlanetary Superhighway and the Origins Program. 7. 7-3543 . 10.1109/AERO.2002.1035332.",
         ]), line_spacing=1, font_size=14)
         vg.add(title, references)
         vg.arrange(DOWN).align_on_border(LEFT)
