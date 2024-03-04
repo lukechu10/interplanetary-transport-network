@@ -10,7 +10,7 @@ from manim_slides.slide import Slide, ThreeDSlide
 
 class TitleSlide(Slide):
     def construct(self):
-        title = Text("Fuel-efficient space travel")
+        title = Text("Low-energy transfers in space")
         author = Text("Luke Chu").next_to(title, DOWN)
         author.font_size = 18
 
