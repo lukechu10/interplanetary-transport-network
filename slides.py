@@ -366,18 +366,57 @@ class EffectivePotential(ThreeDSlide):
 
 class HaloOrbits(Slide):
     def construct(self):
-        image = OpenGLImageMobject("temp_images/HaloOrbits.png")
-        title = Text("Halo Orbits").next_to(image, DOWN) # type: ignore
-        self.add(image)
-        self.play(Write(title))
+        print("Loading data")
+        ship_data = np.load("data/halo_orbits_ships.npy")
+        l1 = np.load("data/halo_orbits_l1.npy")
+
+        print("Transforming to frame centered on L1")
+        ship_data -= l1.reshape((1, 1, 2))
+        print("Done!")
+
+        mu = 1 * 0.0123 / (1 + 0.0123)
+
+        # Apply scaling so that everything fits on the screen
+        scale = 100
+
+        # Add L1 point
+        l1_dot = Dot(point=[0, 0, 0], color=WHITE)
+        l1_label = MathTex("L_1").next_to(l1_dot, DOWN)
+        self.add(l1_dot, l1_label)
+
+        # Add Moon, Earth points
+        moon_r = [1 - mu, 0] - l1
+        moon_dot = Dot(point=(*moon_r * scale, 0), color=GRAY)
+        moon_label = Text("Moon", font_size=14).next_to(moon_dot, RIGHT)
+        self.add(moon_dot, moon_label)
+
+        earth_r = [-mu, 0] - l1
+        earth_dot = Dot(point=(*earth_r * scale, 0), color=GRAY)
+        earth_label = Text("Earth", font_size=14).next_to(earth_dot, LEFT)
+        self.add(earth_dot, earth_label)
+
+        # Add ships
+        ship_dots = TrueDot(center=ORIGIN)
+        ship_dots.clear_points()
+        ship_points = np.pad(ship_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
+        ship_dots.add_points(ship_points)
+        ship_dots.set_color(WHITE)
+        self.add(ship_dots)
+
         self.wait(0.1)
         self.next_slide()
 
-        ballistic_capture_image = OpenGLImageMobject("temp_images/BallisticCapture.png")
-        self.remove(image)
-        self.add(ballistic_capture_image)
-        self.wait(0.1)
+        time_step = ValueTracker(0)
 
+        def update_ships(mob: TrueDot):
+            time_index = int((len(ship_data) - 1) * time_step.get_value())
+            ship_points = np.pad(ship_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
+
+            mob.clear_points()
+            mob.add_points(ship_points)
+        ship_dots.add_updater(update_ships)
+
+        self.play(time_step.animate.set_value(1), run_time=10, rate_func=linear)
         self.interactive_embed()
 
 class PotentialHill(Slide):

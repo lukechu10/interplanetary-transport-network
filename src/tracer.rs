@@ -39,7 +39,7 @@ pub fn trace_planets(opts: TracePlanets) -> Array3<f64> {
 
 pub struct TraceShips<'a, F>
 where
-    F: Fn(&[f64; 2], &[f64; 2]) -> [f64; 2],
+    F: Fn([f64; 2], [f64; 2]) -> [f64; 2],
 {
     pub masses: ArrayView1<'a, f64>,
     pub mass_positions_at_t: ArrayView3<'a, f64>,
@@ -52,7 +52,7 @@ where
 
 pub fn trace_ships<F>(opts: TraceShips<F>) -> Array3<f64>
 where
-    F: Fn(&[f64; 2], &[f64; 2]) -> [f64; 2],
+    F: Fn([f64; 2], [f64; 2]) -> [f64; 2],
 {
     trace_ships_inspect(opts, |_| {})
 }
@@ -69,7 +69,7 @@ pub struct InspectData {
 
 pub fn trace_ships_inspect<F, G>(opts: TraceShips<F>, mut inspect: G) -> Array3<f64>
 where
-    F: Fn(&[f64; 2], &[f64; 2]) -> [f64; 2],
+    F: Fn([f64; 2], [f64; 2]) -> [f64; 2],
     G: FnMut(InspectData),
 {
     let TraceShips {
@@ -105,7 +105,7 @@ where
             mass_positions_at_t.slice(s![i, .., ..]),
         );
         // Accelerations due to fictitious forces.
-        for (mut accelerations, (ship_position, ship_velocity)) in
+        for (mut acceleration, (ship_position, ship_velocity)) in
             accelerations.axis_iter_mut(Axis(0)).zip(
                 ship_positions
                     .axis_iter(Axis(0))
@@ -115,8 +115,8 @@ where
             let ship_position = ship_position.as_slice().unwrap().try_into().unwrap();
             let ship_velocity = ship_velocity.as_slice().unwrap().try_into().unwrap();
             let fictitious_force = fictitious_force(ship_position, ship_velocity);
-            accelerations[0] += fictitious_force[0] / masses[1];
-            accelerations[1] += fictitious_force[1] / masses[1];
+            acceleration[0] += fictitious_force[0];
+            acceleration[1] += fictitious_force[1];
         }
 
         ship_velocities = ship_velocities + accelerations * dt;
