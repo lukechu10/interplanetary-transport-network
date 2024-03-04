@@ -1,4 +1,4 @@
-use ndarray::{s, Array, Array1, Array2, Array3, ArrayView1, ArrayView2, ArrayView3, Axis};
+use ndarray::{s, Array, Array2, Array3, ArrayView1, ArrayView2, ArrayView3, Axis};
 
 /// Trace all the bodies in the simulation and save the results of their positions.
 pub struct TracePlanets<'a> {
@@ -54,6 +54,24 @@ pub fn trace_ships<F>(opts: TraceShips<F>) -> Array3<f64>
 where
     F: Fn(&[f64; 2], &[f64; 2]) -> [f64; 2],
 {
+    trace_ships_inspect(opts, |_| {})
+}
+
+/// Parameter passed to the inspect function in [`trace_ships_inspect`].
+pub struct InspectData {
+    /// Value of x in the previous time step.
+    pub prev_x: [f64; 2],
+    /// Value of x in the current time step.
+    pub x: [f64; 2],
+    /// Index of the ship that is being inspected.
+    pub ship_i: usize,
+}
+
+pub fn trace_ships_inspect<F, G>(opts: TraceShips<F>, mut inspect: G) -> Array3<f64>
+where
+    F: Fn(&[f64; 2], &[f64; 2]) -> [f64; 2],
+    G: FnMut(InspectData),
+{
     let TraceShips {
         masses,
         mass_positions_at_t,
@@ -102,7 +120,23 @@ where
         }
 
         ship_velocities = ship_velocities + accelerations * dt;
-        ship_positions = ship_positions + ship_velocities.clone() * dt;
+        for (ship_i, (mut ship_position, ship_velocity)) in ship_positions
+            .axis_iter_mut(Axis(0))
+            .zip(ship_velocities.axis_iter(Axis(0)))
+            .enumerate()
+        {
+            let new_position = [
+                ship_position[0] + ship_velocity[0] * dt,
+                ship_position[1] + ship_velocity[1] * dt,
+            ];
+            inspect(InspectData {
+                prev_x: [ship_position[0], ship_position[1]],
+                x: [new_position[0], new_position[1]],
+                ship_i,
+            });
+            ship_position[0] = new_position[0];
+            ship_position[1] = new_position[1];
+        }
     }
 
     ship_positions_at_t
