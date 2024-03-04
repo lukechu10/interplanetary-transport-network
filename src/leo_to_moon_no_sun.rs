@@ -76,6 +76,7 @@ pub fn start() {
         time_steps,
         ship_positions: ship_positions.view(),
         ship_velocities: ship_velocities.view(),
+        fictitious_force: |_, _| [0., 0.],
     };
 
     log::info!("tracing ships");

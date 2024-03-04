@@ -89,6 +89,7 @@ pub fn start() {
         time_steps,
         ship_positions: ship_positions.view(),
         ship_velocities: ship_velocities.view(),
+        fictitious_force: |_, _| [0., 0.],
     };
 
     log::info!("tracing ships");
@@ -180,5 +181,9 @@ pub fn start() {
 
     write_npy("data/leo_to_moon_test_bodies.npy", &mass_positions_at_t).unwrap();
     write_npy("data/leo_to_moon_test_ships.npy", &ship_positions_at_t).unwrap();
-    write_npy("data/leo_to_moon_test_best_ship.npy", &array![smallest_rel_v_i as u64]).unwrap();
+    write_npy(
+        "data/leo_to_moon_test_best_ship.npy",
+        &array![smallest_rel_v_i as u64],
+    )
+    .unwrap();
 }

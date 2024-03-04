@@ -1,7 +1,7 @@
 use std::f64;
 
 use crate::tracer::{trace_planets, trace_ships, TracePlanets, TraceShips};
-use ndarray::{array, Array2, Axis, s};
+use ndarray::{array, s, Array2, Axis};
 use ndarray_npy::write_npy;
 
 pub fn start() {
@@ -91,6 +91,7 @@ pub fn start() {
         time_steps,
         ship_positions: ship_positions.view(),
         ship_velocities: ship_velocities.view(),
+        fictitious_force: |_, _| [0., 0.],
     };
 
     log::info!("tracing ships");
@@ -171,9 +172,18 @@ pub fn start() {
         ship_velocities[[smallest_rel_v_i, 0]],
         ship_velocities[[smallest_rel_v_i, 1]]
     );
-    log::info!("|v_i| = {}", (ship_velocities[[smallest_rel_v_i, 0]].powi(2) + ship_velocities[[smallest_rel_v_i, 1]].powi(2)).sqrt());
+    log::info!(
+        "|v_i| = {}",
+        (ship_velocities[[smallest_rel_v_i, 0]].powi(2)
+            + ship_velocities[[smallest_rel_v_i, 1]].powi(2))
+        .sqrt()
+    );
     log::info!("escape v for best result: {smallest_rel_v_esc}");
 
     write_npy("data/leo_to_moon_compute_bodies.npy", &mass_positions_at_t).unwrap();
-    write_npy("data/leo_to_moon_compute_ships.npy", &ship_positions_at_t.slice(s![.., smallest_rel_v_i, ..])).unwrap();
+    write_npy(
+        "data/leo_to_moon_compute_ships.npy",
+        &ship_positions_at_t.slice(s![.., smallest_rel_v_i, ..]),
+    )
+    .unwrap();
 }

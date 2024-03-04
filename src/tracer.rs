@@ -1,4 +1,4 @@
-use ndarray::{s, Array, Array2, Array3, ArrayView1, ArrayView2, ArrayView3, Axis};
+use ndarray::{s, Array, Array1, Array2, Array3, ArrayView1, ArrayView2, ArrayView3, Axis};
 
 /// Trace all the bodies in the simulation and save the results of their positions.
 pub struct TracePlanets<'a> {
@@ -37,16 +37,23 @@ pub fn trace_planets(opts: TracePlanets) -> Array3<f64> {
     positions_at_t
 }
 
-pub struct TraceShips<'a> {
+pub struct TraceShips<'a, F>
+where
+    F: Fn(&[f64; 2], &[f64; 2]) -> [f64; 2],
+{
     pub masses: ArrayView1<'a, f64>,
     pub mass_positions_at_t: ArrayView3<'a, f64>,
     pub ship_positions: ArrayView2<'a, f64>,
     pub ship_velocities: ArrayView2<'a, f64>,
     pub dt: f64,
     pub time_steps: usize,
+    pub fictitious_force: F,
 }
 
-pub fn trace_ships(opts: TraceShips) -> Array3<f64> {
+pub fn trace_ships<F>(opts: TraceShips<F>) -> Array3<f64>
+where
+    F: Fn(&[f64; 2], &[f64; 2]) -> [f64; 2],
+{
     let TraceShips {
         masses,
         mass_positions_at_t,
@@ -54,6 +61,7 @@ pub fn trace_ships(opts: TraceShips) -> Array3<f64> {
         ship_velocities,
         dt,
         time_steps,
+        fictitious_force,
     } = opts;
     assert_eq!(mass_positions_at_t.len_of(Axis(1)), masses.len());
 
@@ -73,11 +81,26 @@ pub fn trace_ships(opts: TraceShips) -> Array3<f64> {
             .unwrap();
 
         // Acceleration due to masses only (not other ships).
-        let accelerations = accelerations(
+        let mut accelerations = accelerations(
             ship_positions.view(),
             masses.view(),
             mass_positions_at_t.slice(s![i, .., ..]),
         );
+        // Accelerations due to fictitious forces.
+        for (mut accelerations, (ship_position, ship_velocity)) in
+            accelerations.axis_iter_mut(Axis(0)).zip(
+                ship_positions
+                    .axis_iter(Axis(0))
+                    .zip(ship_velocities.axis_iter(Axis(0))),
+            )
+        {
+            let ship_position = ship_position.as_slice().unwrap().try_into().unwrap();
+            let ship_velocity = ship_velocity.as_slice().unwrap().try_into().unwrap();
+            let fictitious_force = fictitious_force(ship_position, ship_velocity);
+            accelerations[0] += fictitious_force[0] / masses[1];
+            accelerations[1] += fictitious_force[1] / masses[1];
+        }
+
         ship_velocities = ship_velocities + accelerations * dt;
         ship_positions = ship_positions + ship_velocities.clone() * dt;
     }
