@@ -676,4 +676,8 @@ class References(Slide):
         ]), line_spacing=1, font_size=14)
         vg.add(title, references)
         vg.arrange(DOWN).align_on_border(LEFT)
-        self.play(Write(vg))
+        self.play(Write(vg), run_time=1.5)
+
+        source_code = Tex(r"Source code: \textit{github.com/lukechu10/low-energy-transfers-presentation}", font_size=18).to_edge(DL)
+        self.play(Write(source_code), run_time=1)
+
