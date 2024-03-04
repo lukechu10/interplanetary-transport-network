@@ -367,22 +367,32 @@ class EffectivePotential(ThreeDSlide):
 class HaloOrbits(Slide):
     def construct(self):
         print("Loading data")
-        ship_data = np.load("data/halo_orbits_ships.npy")
+        search_data = np.load("data/halo_orbits_search.npy")
+        orbit_data = np.load("data/halo_orbits.npy")
         l1 = np.load("data/halo_orbits_l1.npy")
 
         print("Transforming to frame centered on L1")
-        ship_data -= l1.reshape((1, 1, 2))
+        search_data -= l1.reshape((1, 1, 2))
+        orbit_data -= l1.reshape((1, 1, 2))
+
+        # Get rid of any values under y=0
+        np.clip(search_data[:,:,1], 0, None, out=search_data[:,:,1])
+        np.clip(orbit_data[:,:,1], 0, None, out=orbit_data[:,:,1])
         print("Done!")
 
         mu = 1 * 0.0123 / (1 + 0.0123)
 
         # Apply scaling so that everything fits on the screen
-        scale = 300
+        scale = 800
 
         # Add L1 point
-        l1_dot = Dot(point=[0, 0, 0], color=WHITE)
+        l1_dot = Dot(point=[0, 0, 0], color=WHITE) # type: ignore
         l1_label = MathTex("L_1").next_to(l1_dot, DOWN)
         self.add(l1_dot, l1_label)
+
+        # Add y=0 line
+        y_line = Line(start=[-8, 0, 0], end=[8, 0, 0], color=WHITE) # type: ignore
+        self.add(y_line)
 
         # Add Moon, Earth points
         moon_r = [1 - mu, 0] - l1
@@ -398,10 +408,22 @@ class HaloOrbits(Slide):
         # Add ships
         ship_dots = TrueDot(center=ORIGIN)
         ship_dots.clear_points()
-        ship_points = np.pad(ship_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
+        ship_points = np.pad(search_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
         ship_dots.add_points(ship_points)
         ship_dots.set_color(WHITE)
         self.add(ship_dots)
+
+        # Add a trace on all the ships except the first one.
+        search_traces = []
+        for i in range(1, search_data.shape[1]):
+            trace = TracedPath(lambda i=i: ship_dots.points[i], stroke_color=WHITE)
+            search_traces.append(trace)
+        self.add(*search_traces)
+        
+        # Add trace on best ship. Simulation is setup so that the best ship is the first one.
+        best_trace = TracedPath(lambda: ship_dots.points[0], stroke_color=LIMEGREEN)
+        self.add(best_trace)
+        self.bring_to_back(best_trace)
 
         self.wait(0.1)
         self.next_slide()
@@ -409,14 +431,58 @@ class HaloOrbits(Slide):
         time_step = ValueTracker(0)
 
         def update_ships(mob: TrueDot):
-            time_index = int((len(ship_data) - 1) * time_step.get_value())
-            ship_points = np.pad(ship_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
+            time_index = int((len(search_data) - 1) * time_step.get_value())
+            ship_points = np.pad(search_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
 
             mob.clear_points()
             mob.add_points(ship_points)
+            mob.set_color(WHITE)
         ship_dots.add_updater(update_ships)
 
-        self.play(time_step.animate.set_value(1), run_time=10, rate_func=linear)
+        self.play(time_step.animate.set_value(1), run_time=4, rate_func=smooth)
+        self.next_slide()
+
+        # Show best ship trace now.
+        self.bring_to_front(best_trace)
+        self.next_slide()
+        
+        # Reflect the best path across the y=0 line.
+        best_trace_center = best_trace.get_center()
+        reflected_best_trace = best_trace.copy().flip(RIGHT).shift(DOWN * best_trace_center[1] * 2)
+        self.add(reflected_best_trace)
+        self.next_slide()
+
+        self.remove(*search_traces)
+
+        # Now add the other orbits.
+        time_step.set_value(0)
+        ship_dots.clear_points()
+        ship_points = np.pad(orbit_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
+        ship_dots.add_points(ship_points)
+        ship_dots.set_color(WHITE)
+        ship_dots.remove_updater(update_ships)
+        def update_orbits(mob: TrueDot):
+            time_index = int((len(search_data) - 1) * time_step.get_value())
+            ship_points = np.pad(orbit_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
+
+            mob.clear_points()
+            mob.add_points(ship_points)
+            mob.set_color(WHITE)
+        ship_dots.add_updater(update_orbits)
+
+        orbit_traces = []
+        for i in range(orbit_data.shape[1]):
+            trace = TracedPath(lambda i=i: ship_dots.points[i], stroke_color=LIMEGREEN)
+            orbit_traces.append(trace)
+        orbit_traces = VGroup(*orbit_traces)
+        self.add(orbit_traces)
+
+        self.play(time_step.animate.set_value(1), run_time=4, rate_func=smooth)
+        # Reflect all the traces across the y=0 line.
+        orbit_traces_center = orbit_traces.get_center()
+        reflected_orbit_traces = orbit_traces.copy().flip(RIGHT).shift(DOWN * orbit_traces_center[1] * 2)
+        self.add(reflected_orbit_traces)
+
         self.interactive_embed()
 
 class PotentialHill(Slide):

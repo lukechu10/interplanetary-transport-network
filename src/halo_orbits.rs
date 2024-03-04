@@ -1,5 +1,5 @@
 use crate::tracer::{trace_ships, TraceShips};
-use ndarray::{array, Array2};
+use ndarray::{array, Array2, Array3, ArrayView2};
 use ndarray_npy::write_npy;
 
 /// Numerically find the L1 point for the 3-body problem with `m1` and `m2` masses. Assumes that we
@@ -64,9 +64,76 @@ fn fictitious_force_rotating_frame(omega: f64) -> impl Fn([f64; 2], [f64; 2]) ->
 }
 
 pub fn start() {
-    // Units are c * secs.
-    let total_time = 6.;
-    let dt = 0.0001;
+    // Part 1 ---- Search for halo orbit with distance 0.001
+    let distance_to_l1 = 0.001;
+    let num_ships = 10;
+
+    let ship_positions = array![-distance_to_l1, 0.]
+        .broadcast((num_ships, 2))
+        .unwrap()
+        .to_owned();
+    let min_v = 0.0080;
+    let max_v = 0.0087;
+    let ship_velocities = Array2::from_shape_fn((num_ships, 2), |(i, j)| {
+        // Make the first ship the best ship.
+        // Other ships are merely for visualisation when we apply small perturbation.
+        if i == 0 {
+            if j == 0 {
+                0.
+            } else {
+                0.00835041
+            }
+        } else {
+            let velocity = min_v + (max_v - min_v) * i as f64 / (num_ships as f64 - 2.0);
+            if j == 0 {
+                0.
+            } else {
+                velocity
+            }
+        }
+    });
+
+    let ship_positions_at_t =
+        simulate_ships(1.5, ship_positions.view(), ship_velocities.view(), true);
+    write_npy("data/halo_orbits_search.npy", &ship_positions_at_t).unwrap();
+
+    // Part 2 ---- Show orbits with various different distances.
+    // We include the ship with distance 0.0010 since it is already included in the previous
+    // simulation.
+    let ship_positions = array![
+        [-0.0002, 0.],
+        [-0.0004, 0.],
+        [-0.0006, 0.],
+        [-0.0008, 0.],
+        // [-0.0010, 0.],
+        [-0.0012, 0.]
+    ];
+    let ship_velocities = array![
+        [0., 0.0016606407345798996],
+        [0., 0.003325998590411014],
+        [0., 0.00499605554467535],
+        [0., 0.006670864094007755],
+        // [0., 0.008350417993613309],
+        [0., 0.010034790099432749],
+    ];
+    let ship_positions_at_t =
+        simulate_ships(3., ship_positions.view(), ship_velocities.view(), false);
+    write_npy("data/halo_orbits.npy", &ship_positions_at_t).unwrap();
+}
+
+/// Simulate ships around the L1 point of the Earth-Moon system.
+///
+/// If `write_l1` is `true`, writes the value of L1 to `data/halo_orbits_l1.npy`.
+///
+/// `ship_positions` should be relative to the L1 point and `ship_velocities` are in the
+/// co-rotating COM frame.
+pub fn simulate_ships<'a>(
+    total_time: f64,
+    ship_positions: ArrayView2<'a, f64>,
+    ship_velocities: ArrayView2<'a, f64>,
+    write_l1: bool,
+) -> Array3<f64> {
+    let dt = 0.00005;
     let time_steps = (total_time / dt) as usize;
 
     log::info!("dt = {dt}, time steps = {time_steps}");
@@ -91,34 +158,12 @@ pub fn start() {
     let l1_x = find_l1_x(m1, m2);
     let l1 = array![l1_x, 0.];
     log::info!("Computed L1 to be at x = {l1_x}");
+    if write_l1 {
+        write_npy("data/halo_orbits_l1.npy", &l1).unwrap();
+    }
 
-    let distance_to_l1 = 0.001;
-    let num_ships = 200;
-
-    let ship_positions = array![l1[0] - distance_to_l1, 0.]
-        .broadcast((num_ships, 2))
-        .unwrap()
-        .to_owned();
-    let min_v = 0.00832;
-    let max_v = 0.00848;
-    let ship_velocities = Array2::from_shape_fn((num_ships, 2), |(i, j)| {
-        // Make the first ship the best ship.
-        // Other ships are merely for visualisation when we apply small perturbation.
-        if i == 0 {
-            if j == 0 {
-                0.
-            } else {
-                0.00834968
-            }
-        } else {
-            let velocity = min_v + (max_v - min_v) * i as f64 / (num_ships as f64 - 2.0);
-            if j == 0 {
-                0.
-            } else {
-                velocity
-            }
-        }
-    });
+    // Offset ship positions by L1.
+    let ship_positions = ship_positions.to_owned() + l1.into_shape((1, 2)).unwrap();
 
     let opts = TraceShips {
         masses: masses.view(),
@@ -131,8 +176,5 @@ pub fn start() {
     };
 
     log::info!("tracing ships");
-    let ship_positions_at_t = trace_ships(opts);
-
-    write_npy("data/halo_orbits_ships.npy", &ship_positions_at_t).unwrap();
-    write_npy("data/halo_orbits_l1.npy", &l1).unwrap();
+    trace_ships(opts)
 }

@@ -68,6 +68,7 @@ pub fn start() {
     let distances_and_guesses = [
         (0.0002, (0.0, 0.005)),
         (0.0004, (0.002, 0.004)),
+        (0.0006, (0.002, 0.006)),
         (0.0008, (0.004, 0.008)),
         (0.0010, (0.006, 0.009)),
         (0.0012, (0.008, 0.012)),
@@ -79,7 +80,10 @@ pub fn start() {
         velocities.push(v);
     }
 
-    log::info!("Final velocities: {:?}", velocities);
+    log::info!("=== Final results ===");
+    for ((d, _), v) in distances_and_guesses.iter().zip(velocities.iter()) {
+        log::info!("d = {d}, v = {v}");
+    }
 }
 
 /// Iterate to find best starting velocity to achieve periodic orbit around Earth-Moon L1.
@@ -158,7 +162,7 @@ pub fn find_velocity_for_distance_to_l1(
 
         log::info!("tracing {num_ships} ships");
         trace_ships_inspect(opts, |ship| {
-            // Check if we just crossed x=0 in this time step.
+            // Check if we just crossed the x-axis in this time step.
             if ship.prev_r[1] > 0. && ship.r[1] < 0. {
                 // Calculate the angle of the ship relative to the x-axis.
                 let dx = ship.r[0] - ship.prev_r[0];
