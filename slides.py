@@ -385,7 +385,7 @@ class HaloOrbits(Slide):
         mu = 1 * 0.0123 / (1 + 0.0123)
 
         # Apply scaling so that everything fits on the screen
-        scale = 800
+        scale = 20
 
         # Add L1 point
         l1_dot = Dot(point=[0, 0, 0], color=WHITE) # type: ignore
@@ -399,12 +399,12 @@ class HaloOrbits(Slide):
         # Add Moon, Earth points
         moon_r = [1 - mu, 0] - l1
         moon_dot = Dot(point=(*moon_r * scale, 0), color=GRAY)
-        moon_label = Text("Moon", font_size=14).next_to(moon_dot, RIGHT)
+        moon_label = Text("Moon", font_size=14).next_to(moon_dot, DOWN)
         self.add(moon_dot, moon_label)
 
         earth_r = [-mu, 0] - l1
         earth_dot = Dot(point=(*earth_r * scale, 0), color=GRAY)
-        earth_label = Text("Earth", font_size=14).next_to(earth_dot, LEFT)
+        earth_label = Text("Earth", font_size=14).next_to(earth_dot, DOWN)
         self.add(earth_dot, earth_label)
 
         # Add ships
@@ -646,13 +646,72 @@ class PotentialHill(Slide):
         self.interactive_embed()
 
 
-class Manifolds3Body(ThreeDSlide):
+class Manifolds3Body(Slide):
     def construct(self):
-        image = OpenGLImageMobject("temp_images/IntersectingManifolds.png")
-        text = Text("Sun-Earth stable manifolds", font_size=15).next_to(image, DOWN) # type: ignore
-        self.add(image)
-        self.play(Write(text))
-        self.wait()
+        # image = OpenGLImageMobject("temp_images/IntersectingManifolds.png")
+        # text = Text("Sun-Earth stable manifolds", font_size=15).next_to(image, DOWN) # type: ignore
+        # self.add(image)
+        # self.play(Write(text))
+        # self.wait()
+        # self.interactive_embed()
+        # === Earth-Moon manifolds ===
+        print("Loading data")
+        data = np.load("data/manifolds_3_body.npy")
+        l1_earth_moon = np.load("data/manifolds_3_body_earth_moon_l1.npy")
+
+        mu = 1 * 0.0123 / (1 + 0.0123)
+
+        # Apply scaling so that everything fits on the screen
+        scale = 3
+
+        # Add L1 point
+        l1_dot = Dot(point=(*l1_earth_moon * scale, 0), color=WHITE)
+        l1_label = MathTex("L_1").next_to(l1_dot, DOWN)
+        self.add(l1_dot, l1_label)
+
+        # Add Moon, Earth points
+        moon_r = np.array([1 - mu, 0])
+        moon_dot = Dot(point=(*moon_r * scale, 0), color=GRAY)
+        moon_label = Text("Moon", font_size=14).next_to(moon_dot, RIGHT)
+        self.add(moon_dot, moon_label)
+
+        earth_r = np.array([-mu, 0])
+        earth_dot = Dot(point=(*earth_r * scale, 0), color=GRAY)
+        earth_label = Text("Earth", font_size=14).next_to(earth_dot, LEFT)
+        self.add(earth_dot, earth_label)
+
+        # Add ships
+        ship_dots = TrueDot(center=ORIGIN)
+        ship_dots.clear_points()
+        ship_points = np.pad(data[0] * scale, ((0, 0), (0, 1)), mode="constant")
+        ship_dots.add_points(ship_points)
+        ship_dots.set_color(WHITE)
+        self.add(ship_dots)
+
+        # Add a trace on all the ships except the first one.
+        search_traces = VGroup()
+        for i in range(0, data.shape[1]):
+            trace = TracedPath(lambda i=i: ship_dots.points[i], stroke_color=RED)
+            search_traces.add(trace)
+        self.add(search_traces)
+        
+        self.wait(0.1)
+        self.next_slide()
+
+        time_step = ValueTracker(0)
+
+        def update_ships(mob: TrueDot):
+            time_index = int((len(data) - 1) * time_step.get_value())
+            ship_points = np.pad(data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
+
+            mob.clear_points()
+            mob.add_points(ship_points)
+            mob.set_color(WHITE)
+        ship_dots.add_updater(update_ships)
+
+        self.play(time_step.animate.set_value(1), run_time=12, rate_func=linear)
+        self.next_slide()
+        
         self.interactive_embed()
 
 class InterplanetaryTransportNetwork(Slide):

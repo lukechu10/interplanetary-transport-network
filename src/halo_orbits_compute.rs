@@ -8,7 +8,7 @@ use ndarray::{array, Array1, Array2};
 ///
 /// This is done by numerically iterating over the x-axis to find the point where the net force is
 /// 0.
-fn find_l1_x(m1: f64, m2: f64) -> f64 {
+pub fn find_l1_x(m1: f64, m2: f64) -> f64 {
     let mu = m1 * m2 / (m1 + m2);
     // Assume m1 is situated at -mu and m2 is situated at 1 - mu.
     let x1 = -mu;
@@ -48,7 +48,7 @@ fn find_l1_x(m1: f64, m2: f64) -> f64 {
 
 /// Returns a closure giving the fictitious force in a rotating reference frame with constant
 /// angular velocity `omega`.
-fn fictitious_force_rotating_frame(omega: f64) -> impl Fn([f64; 2], [f64; 2]) -> [f64; 2] {
+pub fn fictitious_force_rotating_frame(omega: f64) -> impl Fn([f64; 2], [f64; 2]) -> [f64; 2] {
     move |r, v| {
         // Note: × designates the cross product.
         // omega is out of the 2d plane.
@@ -66,22 +66,40 @@ fn fictitious_force_rotating_frame(omega: f64) -> impl Fn([f64; 2], [f64; 2]) ->
 
 pub fn start() {
     let distances_and_guesses = [
-        (0.0002, (0.0, 0.005)),
-        (0.0004, (0.002, 0.004)),
-        (0.0006, (0.002, 0.006)),
-        (0.0008, (0.004, 0.008)),
-        (0.0010, (0.006, 0.009)),
-        (0.0012, (0.008, 0.012)),
+        // (0.0002, (0.0, 0.005), 1e-6),
+        // (0.0004, (0.002, 0.004), 1e-6),
+        // (0.0006, (0.002, 0.006), 1e-6),
+        // (0.0008, (0.004, 0.008), 1e-6),
+        // (0.0010, (0.006, 0.009), 1e-6),
+        // (0.0012, (0.008, 0.012), 1e-6),
+        // (0.0014, (0.010, 0.014), 1e-6),
+        // (0.0016, (0.012, 0.016), 1e-6),
+        // (0.0018, (0.013, 0.016), 1e-6),
+        // (0.0020, (0.013, 0.020), 1e-6),
+        // (0.0030, (0.020, 0.040), 1e-6),
+        // (0.0040, (0.020, 0.1), 1e-6),
+        // (0.0050, (0.040, 0.1), 1e-6),
+        // (0.0060, (0.040, 0.1), 1e-6),
+        // (0.0070, (0.040, 0.1), 1e-6),
+        // (0.0080, (0.040, 0.1), 1e-6),
+        // (0.0090, (0.040, 0.1), 1e-6),
+        (0.0100, (0.040, 0.1), 1e-6),
+        (0.0150, (0.100, 0.4), 1e-6),
+        (0.0200, (0.100, 0.4), 1e-6),
+        (0.0250, (0.100, 0.4), 1e-5),
+        (0.0300, (0.100, 0.4), 1e-5),
+        (0.0350, (0.100, 0.4), 1e-5),
+        (0.0400, (0.100, 0.4), 1e-5),
     ];
     let mut velocities = Vec::new();
-    for (d, (low_v, high_v)) in distances_and_guesses {
-        let v = find_velocity_for_distance_to_l1(d, low_v, high_v, 50);
+    for (d, (low_v, high_v), epsilon) in distances_and_guesses {
+        let v = find_velocity_for_distance_to_l1(d, low_v, high_v, 50, epsilon);
         log::info!("=> d = {d}, v = {v}");
         velocities.push(v);
     }
 
     log::info!("=== Final results ===");
-    for ((d, _), v) in distances_and_guesses.iter().zip(velocities.iter()) {
+    for ((d, _, _), v) in distances_and_guesses.iter().zip(velocities.iter()) {
         log::info!("d = {d}, v = {v}");
     }
 }
@@ -96,6 +114,7 @@ pub fn find_velocity_for_distance_to_l1(
     mut low_v: f64,
     mut high_v: f64,
     num_ships: usize,
+    epsilon: f64,
 ) -> f64 {
     let total_time = 3.;
     let dt = 0.00005;
@@ -134,8 +153,6 @@ pub fn find_velocity_for_distance_to_l1(
     );
     // Best angle relative to x-axis. Want this value to be close to PI/2.
     let mut best_angle = 0.0;
-
-    let epsilon = 1e-6;
 
     while (best_angle - PI / 2.).abs() > epsilon {
         let ship_velocities = Array2::from_shape_fn((num_ships, 2), |(i, j)| {

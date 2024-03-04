@@ -1,79 +1,21 @@
-use crate::tracer::{trace_ships, TraceShips};
+use crate::{
+    halo_orbits_compute::{fictitious_force_rotating_frame, find_l1_x},
+    tracer::{trace_ships, TraceShips},
+};
 use ndarray::{array, Array2, Array3, ArrayView2};
 use ndarray_npy::write_npy;
 
-/// Numerically find the L1 point for the 3-body problem with `m1` and `m2` masses. Assumes that we
-/// are in the co-rotating COM frame. Returns the x-coordinate of the L1 point.
-///
-/// This is done by numerically iterating over the x-axis to find the point where the net force is
-/// 0.
-fn find_l1_x(m1: f64, m2: f64) -> f64 {
-    let mu = m1 * m2 / (m1 + m2);
-    // Assume m1 is situated at -mu and m2 is situated at 1 - mu.
-    let x1 = -mu;
-    let x2 = 1. - mu;
-
-    // Angular frequency of frame.
-    let omega = (m1 + m2) / m1;
-
-    let epsilon = 1e-6;
-    // Initial search range. We need to make sure we are between the two masses.
-    let mut low = -mu + epsilon;
-    let mut high = 1. - mu - epsilon;
-
-    let mut a = f64::INFINITY;
-    let mut x = 0.0;
-    while a.abs() > epsilon {
-        // Pick the mid-point of the range.
-        x = (low + high) / 2.;
-
-        // Calculate the force at x.
-        let f1 = -m1 / (x - x1).powi(2);
-        let f2 = m2 / (x - x2).powi(2);
-        let f_c = omega * omega * x;
-
-        a = f1 + f2 + f_c;
-        if a > 0. {
-            // Pulling towards m2. Move higher bound closer.
-            high = x;
-        } else {
-            // Pulling towards m1. Move lower bound closer.
-            low = x;
-        }
-    }
-
-    x
-}
-
-/// Returns a closure giving the fictitious force in a rotating reference frame with constant
-/// angular velocity `omega`.
-fn fictitious_force_rotating_frame(omega: f64) -> impl Fn([f64; 2], [f64; 2]) -> [f64; 2] {
-    move |r, v| {
-        // Note: × designates the cross product.
-        // omega is out of the 2d plane.
-
-        // a_centrifugal = -omega × (omega × r)
-        let omega_squared = omega * omega;
-        let a_cf = [omega_squared * r[0], omega_squared * r[1]];
-
-        // a_coriollis = -2 × omega × v
-        let a_cor = [2. * omega * v[1], -2. * omega * v[0]];
-
-        [a_cf[0] + a_cor[0], a_cf[1] + a_cor[1]]
-    }
-}
-
 pub fn start() {
     // Part 1 ---- Search for halo orbit with distance 0.001
-    let distance_to_l1 = 0.001;
+    let distance_to_l1 = 0.0200;
     let num_ships = 10;
 
     let ship_positions = array![-distance_to_l1, 0.]
         .broadcast((num_ships, 2))
         .unwrap()
         .to_owned();
-    let min_v = 0.0080;
-    let max_v = 0.0087;
+    let min_v = 0.175;
+    let max_v = 0.210;
     let ship_velocities = Array2::from_shape_fn((num_ships, 2), |(i, j)| {
         // Make the first ship the best ship.
         // Other ships are merely for visualisation when we apply small perturbation.
@@ -81,7 +23,7 @@ pub fn start() {
             if j == 0 {
                 0.
             } else {
-                0.00835041
+                0.19227550269368912
             }
         } else {
             let velocity = min_v + (max_v - min_v) * i as f64 / (num_ships as f64 - 2.0);
@@ -94,30 +36,70 @@ pub fn start() {
     });
 
     let ship_positions_at_t =
-        simulate_ships(1.5, ship_positions.view(), ship_velocities.view(), true);
+        simulate_ships(2., ship_positions.view(), ship_velocities.view(), true);
     write_npy("data/halo_orbits_search.npy", &ship_positions_at_t).unwrap();
 
     // Part 2 ---- Show orbits with various different distances.
-    // We include the ship with distance 0.0010 since it is already included in the previous
+    // We exclude the ship with distance 0.0010 since it is already included in the previous
     // simulation.
+    //
+    // Data for velocities are found by running `crate::halo_orbits_compute`.
     let ship_positions = array![
-        [-0.0002, 0.],
-        [-0.0004, 0.],
-        [-0.0006, 0.],
-        [-0.0008, 0.],
-        // [-0.0010, 0.],
-        [-0.0012, 0.]
+        // [-0.0002, 0.],
+        // [-0.0004, 0.],
+        // [-0.0006, 0.],
+        // [-0.0008, 0.],
+        // // [-0.0010, 0.],
+        // [-0.0012, 0.],
+        // [-0.0014, 0.],
+        // [-0.0016, 0.],
+        // [-0.0018, 0.],
+        // [-0.0020, 0.],
+        // // Increase spacing.
+        // [-0.0030, 0.],
+        // [-0.0040, 0.],
+        // [-0.0050, 0.],
+        // [-0.0060, 0.],
+        // [-0.0070, 0.],
+        // [-0.0080, 0.],
+        // [-0.0090, 0.],
+        [-0.0100, 0.],
+        [-0.0150, 0.],
+        [-0.0200, 0.],
+        [-0.0250, 0.],
+        [-0.0300, 0.],
+        [-0.0350, 0.],
+        [-0.0400, 0.],
     ];
     let ship_velocities = array![
-        [0., 0.0016606407345798996],
-        [0., 0.003325998590411014],
-        [0., 0.00499605554467535],
-        [0., 0.006670864094007755],
-        // [0., 0.008350417993613309],
-        [0., 0.010034790099432749],
+        // [0., 0.0016606407345798996],
+        // [0., 0.003325998590411014],
+        // [0., 0.00499605554467535],
+        // [0., 0.006670864094007755],
+        // // [0., 0.008350417993613309],
+        // [0., 0.010034790099432749],
+        // [0., 0.011723989431725399],
+        // [0., 0.013418082601637073],
+        // [0., 0.015117025028270708],
+        // [0., 0.016820927383269603],
+        // // Increase spacing.
+        // [0., 0.02541529881083493],
+        // [0., 0.03413726892581658],
+        // [0., 0.04299069218627364],
+        // [0., 0.05197897929811189],
+        // [0., 0.0611055021673775],
+        // [0., 0.07037314040919743],
+        // [0., 0.07978444355668131],
+        [0., 0.08934111342264894],
+        [0., 0.1392916602048911],
+        [0., 0.19227550269368912],
+        [0., 0.24582022866010467],
+        [0., 0.2952922746162443],
+        [0., 0.33682369955181457],
+        [0., 0.3700428861291137],
     ];
     let ship_positions_at_t =
-        simulate_ships(3., ship_positions.view(), ship_velocities.view(), false);
+        simulate_ships(4., ship_positions.view(), ship_velocities.view(), false);
     write_npy("data/halo_orbits.npy", &ship_positions_at_t).unwrap();
 }
 

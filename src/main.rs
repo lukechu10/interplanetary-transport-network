@@ -7,6 +7,7 @@ pub mod leo_to_moon;
 pub mod leo_to_moon_compute;
 pub mod leo_to_moon_no_sun;
 pub mod leo_to_moon_test;
+pub mod manifolds_3_body;
 pub mod multi_planet;
 pub mod single_planet;
 pub mod tracer;
@@ -30,6 +31,7 @@ fn main() {
         "leo_to_moon_no_sun" => leo_to_moon_no_sun::start(),
         "halo_orbits" => halo_orbits::start(),
         "halo_orbits_compute" => halo_orbits_compute::start(),
+        "manifolds_3_body" => manifolds_3_body::start(),
         _ => panic!("unknown argument"),
     }
 }
