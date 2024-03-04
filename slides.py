@@ -416,11 +416,11 @@ class HaloOrbits(Slide):
         self.add(ship_dots)
 
         # Add a trace on all the ships except the first one.
-        search_traces = []
+        search_traces = VGroup()
         for i in range(1, search_data.shape[1]):
             trace = TracedPath(lambda i=i: ship_dots.points[i], stroke_color=WHITE)
-            search_traces.append(trace)
-        self.add(*search_traces)
+            search_traces.add(trace)
+        self.add(search_traces)
         
         # Add trace on best ship. Simulation is setup so that the best ship is the first one.
         best_trace = TracedPath(lambda: ship_dots.points[0], stroke_color=LIMEGREEN, stroke_width=4)
@@ -460,15 +460,15 @@ class HaloOrbits(Slide):
 
         self.next_slide()
 
-        self.remove(*search_traces)
+        self.remove(search_traces)
 
         # Now add the other orbits.
-        time_step.set_value(0)
         ship_dots.clear_points()
         ship_points = np.pad(orbit_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
         ship_dots.add_points(ship_points)
         ship_dots.set_color(WHITE)
         ship_dots.remove_updater(update_ships)
+        time_step.set_value(0)
         def update_orbits(mob: TrueDot):
             time_index = int((len(search_data) - 1) * time_step.get_value())
             ship_points = np.pad(orbit_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
