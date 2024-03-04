@@ -178,23 +178,27 @@ pub fn find_velocity_for_distance_to_l1(
         let mut ship_angles = Array1::from_elem(num_ships, 0.);
 
         log::info!("tracing {num_ships} ships");
-        trace_ships_inspect(opts, |ship| {
-            // Check if we just crossed the x-axis in this time step.
-            if ship.prev_r[1] > 0. && ship.r[1] < 0. {
-                // Calculate the angle of the ship relative to the x-axis.
-                let dx = ship.r[0] - ship.prev_r[0];
-                let dy = ship.r[1] - ship.prev_r[1];
-                assert!(dy < 0.);
-                let theta = if dx > 0. {
-                    // We crossed the x-axis with a rightward velocity.
-                    PI + (dy / dx).atan()
-                } else {
-                    // We crossed the x-axis with a leftward velocity.
-                    (dy / dx).atan()
-                };
-                ship_angles[ship.i] = theta;
-            }
-        });
+        trace_ships_inspect(
+            opts,
+            |ship| {
+                // Check if we just crossed the x-axis in this time step.
+                if ship.prev_r[1] > 0. && ship.r[1] < 0. {
+                    // Calculate the angle of the ship relative to the x-axis.
+                    let dx = ship.r[0] - ship.prev_r[0];
+                    let dy = ship.r[1] - ship.prev_r[1];
+                    assert!(dy < 0.);
+                    let theta = if dx > 0. {
+                        // We crossed the x-axis with a rightward velocity.
+                        PI + (dy / dx).atan()
+                    } else {
+                        // We crossed the x-axis with a leftward velocity.
+                        (dy / dx).atan()
+                    };
+                    ship_angles[ship.i] = theta;
+                }
+            },
+            false,
+        );
 
         // Go through all the angles and find the best ones.
         // The biggest angle smaller than PI/2 becomes the corresponding new low_v.

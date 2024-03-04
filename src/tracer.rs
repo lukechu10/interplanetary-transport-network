@@ -54,7 +54,7 @@ pub fn trace_ships<F>(opts: TraceShips<F>) -> Array3<f64>
 where
     F: Fn([f64; 2], [f64; 2]) -> [f64; 2],
 {
-    trace_ships_inspect(opts, |_| {})
+    trace_ships_inspect(opts, |_| {}, false).0
 }
 
 /// Parameter passed to the inspect function in [`trace_ships_inspect`].
@@ -67,7 +67,16 @@ pub struct InspectData {
     pub i: usize,
 }
 
-pub fn trace_ships_inspect<F, G>(opts: TraceShips<F>, mut inspect: G) -> Array3<f64>
+/// Returns a tuple containg positions and velocity data of the traced spaceships.
+///
+/// If `velocity_data` is set to `false`, the velocity data will simply be an empty array.
+///
+/// Also accepts an `inspect` function which is called for every ship on every time step.
+pub fn trace_ships_inspect<F, G>(
+    opts: TraceShips<F>,
+    mut inspect: G,
+    velocity_data: bool,
+) -> (Array3<f64>, Array3<f64>)
 where
     F: Fn([f64; 2], [f64; 2]) -> [f64; 2],
     G: FnMut(InspectData),
@@ -92,11 +101,21 @@ where
     let mut ship_positions = ship_positions.to_owned();
     let mut ship_velocities = ship_velocities.to_owned();
     let mut ship_positions_at_t = Array3::zeros((0, n, 2));
+    let mut ship_velocities_at_t = if velocity_data {
+        Array3::zeros((0, n, 2))
+    } else {
+        Array3::zeros((0, 0, 0))
+    };
 
     for i in 0..time_steps {
         ship_positions_at_t
             .push(Axis(0), ship_positions.view())
             .unwrap();
+        if velocity_data {
+            ship_velocities_at_t
+                .push(Axis(0), ship_velocities.view())
+                .unwrap();
+        }
 
         // Acceleration due to masses only (not other ships).
         let mut accelerations = accelerations(
@@ -139,7 +158,7 @@ where
         }
     }
 
-    ship_positions_at_t
+    (ship_positions_at_t, ship_velocities_at_t)
 }
 
 /// Calculate the accelerations at every position due to the gravitational field of the bodies each

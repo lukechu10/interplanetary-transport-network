@@ -26,7 +26,6 @@ build-video-all:
 	manim -q$(q) slides.py HaloOrbits --renderer opengl --write_to_movie
 	manim -q$(q) slides.py PotentialHill --renderer opengl --write_to_movie
 	manim -q$(q) slides.py Manifolds3Body --renderer opengl --write_to_movie
-	manim -q$(q) slides.py InterplanetaryTransportNetwork --renderer opengl --write_to_movie
 	manim -q$(q) slides.py References --renderer opengl --write_to_movie
 
 build-slides-html:
@@ -42,6 +41,5 @@ build-slides-html:
 		HaloOrbits \
 		PotentialHill \
 		Manifolds3Body \
-		InterplanetaryTransportNetwork \
 		References \
 		docs/index.html

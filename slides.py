@@ -648,15 +648,11 @@ class PotentialHill(Slide):
 
 class Manifolds3Body(Slide):
     def construct(self):
-        # image = OpenGLImageMobject("temp_images/IntersectingManifolds.png")
-        # text = Text("Sun-Earth stable manifolds", font_size=15).next_to(image, DOWN) # type: ignore
-        # self.add(image)
-        # self.play(Write(text))
-        # self.wait()
-        # self.interactive_embed()
         # === Earth-Moon manifolds ===
         print("Loading data")
-        data = np.load("data/manifolds_3_body.npy")
+        orbit_data = np.load("data/manifolds_3_body_orbit.npy")
+        unstable_data = np.load("data/manifolds_3_body_unstable.npy")
+        stable_data = np.load("data/manifolds_3_body_stable.npy")
         l1_earth_moon = np.load("data/manifolds_3_body_earth_moon_l1.npy")
 
         mu = 1 * 0.0123 / (1 + 0.0123)
@@ -680,47 +676,85 @@ class Manifolds3Body(Slide):
         earth_label = Text("Earth", font_size=14).next_to(earth_dot, LEFT)
         self.add(earth_dot, earth_label)
 
-        # Add ships
-        ship_dots = TrueDot(center=ORIGIN)
-        ship_dots.clear_points()
-        ship_points = np.pad(data[0] * scale, ((0, 0), (0, 1)), mode="constant")
-        ship_dots.add_points(ship_points)
-        ship_dots.set_color(WHITE)
-        self.add(ship_dots)
+        self.wait(0.1)
+        self.next_slide()
 
-        # Add a trace on all the ships except the first one.
-        search_traces = VGroup()
-        for i in range(0, data.shape[1]):
-            trace = TracedPath(lambda i=i: ship_dots.points[i], stroke_color=RED)
-            search_traces.add(trace)
-        self.add(search_traces)
+        # Add ships
+        unstable_dots = TrueDot(center=ORIGIN)
+        unstable_dots.clear_points()
+        unstable_points = np.pad(unstable_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
+        unstable_dots.add_points(unstable_points)
+        unstable_dots.set_color(WHITE)
+        self.add(unstable_dots)
+
+        stable_dots = TrueDot(center=ORIGIN)
+        stable_dots.clear_points()
+        stable_points = np.pad(stable_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
+        stable_dots.add_points(stable_points)
+        stable_dots.set_color(WHITE)
+        self.add(stable_dots)
+
+        # Add a trace on all the ships
+        unstable_traces = VGroup()
+        for i in range(0, unstable_data.shape[1]):
+            trace = TracedPath(lambda i=i: unstable_dots.points[i], stroke_color=RED)
+            unstable_traces.add(trace)
+        self.add(unstable_traces)
+
+        stable_traces = VGroup()
+        for i in range(0, stable_data.shape[1]):
+            trace = TracedPath(lambda i=i: stable_dots.points[i], stroke_color=BLUE)
+            stable_traces.add(trace)
+        self.add(stable_traces)
         
         self.wait(0.1)
         self.next_slide()
 
         time_step = ValueTracker(0)
 
-        def update_ships(mob: TrueDot):
-            time_index = int((len(data) - 1) * time_step.get_value())
-            ship_points = np.pad(data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
+        def update_unstable(mob: TrueDot):
+            time_index = int((len(unstable_data) - 1) * time_step.get_value())
+            ship_points = np.pad(unstable_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
 
             mob.clear_points()
             mob.add_points(ship_points)
-            mob.set_color(WHITE)
-        ship_dots.add_updater(update_ships)
+            mob.set_color(RED)
+        unstable_dots.add_updater(update_unstable)
+        def update_stable(mob: TrueDot):
+            time_index = int((len(stable_data) - 1) * time_step.get_value())
+            ship_points = np.pad(stable_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
+
+            mob.clear_points()
+            mob.add_points(ship_points)
+            mob.set_color(BLUE)
+        stable_dots.add_updater(update_stable)
+
+        # Add orbit trace
+        orbit_dot = Dot(point=(*orbit_data[0, 0] * scale, 0)).set_opacity(0)
+        self.add(orbit_dot)
+        def update_orbit(mob: Dot):
+            time_index = int((len(orbit_data) - 1) * time_step.get_value())
+            coords = orbit_data[time_index, 0] * scale
+            mob.move_to((coords[0], coords[1], 0))
+        orbit_trace = TracedPath(orbit_dot.get_center, stroke_color=LIMEGREEN, stroke_width=4)
+        orbit_dot.add_updater(update_orbit) # type: ignore
+        self.add(orbit_trace)
+
+        # Set opacity
+        stable_traces.set_opacity(0.5)
+        unstable_traces.set_opacity(0.5)
 
         self.play(time_step.animate.set_value(1), run_time=12, rate_func=linear)
+
+        legend = VGroup(
+            Text("Stable", font_size=22, color=BLUE),
+            Text("Unstable", font_size=22, color=RED),
+        )
+        legend.arrange(RIGHT, buff=1).to_edge(LEFT)
+        self.play(Write(legend))
+
         self.next_slide()
         
-        self.interactive_embed()
-
-class InterplanetaryTransportNetwork(Slide):
-    def construct(self):
-        image = OpenGLImageMobject("temp_images/Interplanetary_Superhighway.jpg")
-        title = Text("Interplanetary Transport Network").next_to(image, DOWN) # type: ignore
-        self.add(image)
-        self.play(Write(title))
-        self.wait()
         self.interactive_embed()
 
 class References(Slide):
