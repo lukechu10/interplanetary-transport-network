@@ -20,10 +20,9 @@ run-all-simulations:
 
 build-video-all:
 	manim -q$(q) slides.py TitleSlide --renderer opengl --write_to_movie
-	manim -q$(q) slides.py BuildingATracer --renderer opengl --write_to_movie
+	manim -q$(q) slides.py RestrictedNBodyProblem --renderer opengl --write_to_movie
 	manim -q$(q) slides.py SinglePlanet --renderer opengl --write_to_movie
 	manim -q$(q) slides.py MultiPlanet --renderer opengl --write_to_movie
-	manim -q$(q) slides.py RestrictedNBodyProblem --renderer opengl --write_to_movie
 	manim -q$(q) slides.py LeoToMoon --renderer opengl --write_to_movie
 	manim -q$(q) slides.py EffectivePotential --renderer opengl --write_to_movie
 	manim -q$(q) slides.py HaloOrbits --renderer opengl --write_to_movie
@@ -37,10 +36,9 @@ build-slides-html:
 	rm -r docs/index_assets/
 	manim-slides convert --use-template template.html \
 		TitleSlide \
-		BuildingATracer \
+		RestrictedNBodyProblem \
 		SinglePlanet \
 		MultiPlanet \
-		RestrictedNBodyProblem \
 		LeoToMoon \
 		EffectivePotential \
 		HaloOrbits \

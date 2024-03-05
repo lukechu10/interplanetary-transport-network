@@ -24,11 +24,19 @@ class TitleSlide(Slide):
         self.play(FadeOut(title), FadeOut(author), FadeOut(date))
         self.wait(0.1)
 
-class BuildingATracer(Slide):
+class RestrictedNBodyProblem(Slide):
     def construct(self):
-        title = Text("Building a tracer")
+        title = Text("Building a tracer").to_edge(UP)
+        text = VGroup(
+            Text("Restricted n-body problem"),
+            Text("Massive bodies (Sun, Earth, Moon, etc...)", font_size=20),
+            Text("Spaceships feel influence (but do not influence other bodies themselves)", font_size=20),
+        ).arrange(DOWN)
+
         self.play(Write(title))
-        self.wait()
+        self.next_slide()
+        self.play(Write(text))
+        self.wait(0.1)
 
 class SinglePlanet(Slide):
     def construct(self):
@@ -132,16 +140,6 @@ class MultiPlanet(Slide):
 
         self.wait(0.1)
         self.interactive_embed()
-
-class RestrictedNBodyProblem(Slide):
-    def construct(self):
-        text = VGroup(
-            Text("Restricted n-body problem"),
-            Text("Massive bodies (Sun, Earth, Moon, etc...)", font_size=20),
-            Text("Spaceships feel influence (but do not influence other bodies themselves)", font_size=20),
-        ).arrange(DOWN)
-        self.play(Write(text))
-        self.wait()
 
 class LeoToMoon(Slide):
     def construct(self):
