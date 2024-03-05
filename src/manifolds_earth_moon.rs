@@ -16,7 +16,7 @@ pub fn start() {
         array![[0., velocity]].view(),
         false,
     );
-    write_npy("data/manifolds_3_body_orbit.npy", &orbit_r).unwrap();
+    write_npy("data/manifolds_earth_moon_orbit.npy", &orbit_r).unwrap();
 
     let time_steps = orbit_r.len_of(Axis(0));
 
@@ -80,7 +80,7 @@ pub fn start() {
         fictitious_force: fictitious_force_rotating_frame(omega),
     };
     let unstable_t = trace_ships(opts);
-    write_npy("data/manifolds_3_body_unstable.npy", &unstable_t).unwrap();
+    write_npy("data/manifolds_earth_moon_unstable.npy", &unstable_t).unwrap();
 
     // Now reverse ship_velocities and omega to trace stable manifold.
     let ship_velocities = -ship_velocities;
@@ -95,13 +95,13 @@ pub fn start() {
         fictitious_force: fictitious_force_rotating_frame(omega),
     };
     let stable_t = trace_ships(opts);
-    write_npy("data/manifolds_3_body_stable.npy", &stable_t).unwrap();
+    write_npy("data/manifolds_earth_moon_stable.npy", &stable_t).unwrap();
 
     // Save L1 point for reference in animation.
     let m1 = 1.;
     let m2 = 0.0123;
     let l1_x = find_l1_x(m1, m2);
-    write_npy("data/manifolds_3_body_earth_moon_l1.npy", &array![l1_x, 0.]).unwrap()
+    write_npy("data/manifolds_earth_moon_l1.npy", &array![l1_x, 0.]).unwrap()
 }
 
 /// Simulate ships around the L1 point of the Earth-Moon system.

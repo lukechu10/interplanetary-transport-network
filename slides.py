@@ -494,6 +494,12 @@ class HaloOrbits(Slide):
 
         self.interactive_embed()
 
+class BallisticCapture(Slide):
+    def construct(self):
+        image = OpenGLImageMobject("ballistic_capture.png", width=16, height=9)
+        self.add(image)
+        self.wait(0.1)
+
 class PotentialHill(Slide):
     def construct(self):
         group = VGroup()
@@ -650,10 +656,10 @@ class Manifolds3Body(Slide):
     def construct(self):
         # === Earth-Moon manifolds ===
         print("Loading data")
-        orbit_data = np.load("data/manifolds_3_body_orbit.npy")
-        unstable_data = np.load("data/manifolds_3_body_unstable.npy")
-        stable_data = np.load("data/manifolds_3_body_stable.npy")
-        l1_earth_moon = np.load("data/manifolds_3_body_earth_moon_l1.npy")
+        orbit_data = np.load("data/manifolds_earth_moon_orbit.npy")
+        unstable_data = np.load("data/manifolds_earth_moon_unstable.npy")
+        stable_data = np.load("data/manifolds_earth_moon_stable.npy")
+        l1_earth_moon = np.load("data/manifolds_earth_moon_l1.npy")
 
         mu = 1 * 0.0123 / (1 + 0.0123)
 
@@ -684,14 +690,14 @@ class Manifolds3Body(Slide):
         unstable_dots.clear_points()
         unstable_points = np.pad(unstable_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
         unstable_dots.add_points(unstable_points)
-        unstable_dots.set_color(WHITE)
+        unstable_dots.set_color(RED)
         self.add(unstable_dots)
 
         stable_dots = TrueDot(center=ORIGIN)
         stable_dots.clear_points()
         stable_points = np.pad(stable_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
         stable_dots.add_points(stable_points)
-        stable_dots.set_color(WHITE)
+        stable_dots.set_color(BLUE)
         self.add(stable_dots)
 
         # Add a trace on all the ships
@@ -744,13 +750,13 @@ class Manifolds3Body(Slide):
         stable_traces.set_opacity(0.5)
         unstable_traces.set_opacity(0.5)
 
-        self.play(time_step.animate.set_value(1), run_time=12, rate_func=linear)
+        self.play(time_step.animate.set_value(1), run_time=8, rate_func=linear)
 
         legend = VGroup(
             Text("Stable", font_size=22, color=BLUE),
             Text("Unstable", font_size=22, color=RED),
         )
-        legend.arrange(RIGHT, buff=1).to_edge(LEFT)
+        legend.arrange(DOWN, buff=1).to_edge(LEFT)
         self.play(Write(legend))
 
         self.next_slide()
@@ -771,6 +777,6 @@ class References(Slide):
         vg.arrange(DOWN).align_on_border(LEFT)
         self.play(Write(vg), run_time=1.5)
 
-        source_code = Tex(r"Source code: \textit{github.com/lukechu10/low-energy-transfers-presentation}", font_size=18).to_edge(DL)
+        source_code = Tex(r"Source code: \textit{github.com/lukechu10/interplanetary-transport-network}", font_size=18).to_edge(DL)
         self.play(Write(source_code), run_time=1)
 
