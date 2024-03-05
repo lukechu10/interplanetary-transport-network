@@ -714,7 +714,7 @@ class PotentialHill(Slide):
         for H in H_values:
             v0 = np.sqrt(2 * H - 2 * U(0))
             rockets.append(shoot_rocket(0, v0, t))
-        self.play(t.animate.set_value(15), run_time=6, rate_func=linear)
+        self.play(t.animate.set_value(16), run_time=6, rate_func=linear)
         self.play(*[FadeOut(rocket, run_time=0.2) for rocket in rockets])
 
         # Then from the right.
@@ -723,16 +723,17 @@ class PotentialHill(Slide):
         for H in H_values:
             v0 = -np.sqrt(2 * H - 2 * U(10))
             rockets.append(shoot_rocket(10, v0, t))
-        self.play(t.animate.set_value(15), run_time=6, rate_func=linear)
+        self.play(t.animate.set_value(16), run_time=6, rate_func=linear)
         self.play(*[FadeOut(rocket, run_time=0.2) for rocket in rockets])
 
         self.next_slide()
 
         # Equilibrium point
-        equilibrium = Dot(point=phase_space.c2p(x0, 0), color=WHITE)
-        label = Text("Equilibrium", font_size=16).next_to(equilibrium, DOWN)
+        equilibrium = Dot(point=physical_space.c2p(x0, U(x0)), color=WHITE)
+        equilibrium_phase_space = Dot(point=phase_space.c2p(x0, 0), color=WHITE)
+        label = Text("Equilibrium", font_size=16).next_to(equilibrium_phase_space, DOWN)
 
-        self.add(equilibrium)
+        self.add(equilibrium, equilibrium_phase_space)
         self.play(Write(label))
 
         # Stable and unstable manifolds

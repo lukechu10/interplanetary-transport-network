@@ -48,3 +48,19 @@ build-slides-html:
 		BallisticCapture \
 		References \
 		docs/index.html
+
+build-slides-pptx:
+	manim-slides convert \
+		TitleSlide \
+		RestrictedNBodyProblem \
+		SinglePlanet \
+		MultiPlanet \
+		LeoToMoon \
+		EffectivePotential \
+		HaloOrbits \
+		EarthMoonManifolds \
+		PotentialHill \
+		Manifolds3Body \
+		BallisticCapture \
+		References \
+		docs/slides.pptx
