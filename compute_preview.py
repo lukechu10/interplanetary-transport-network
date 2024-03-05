@@ -152,3 +152,84 @@ class LeoToMoonTest(Slide):
 
         self.play(time_step.animate.set_value(1), run_time=10, rate_func=linear)
         self.interactive_embed()
+
+class HaloOrbitsPreview(Slide):
+    def construct(self):
+        print("Loading data")
+        search_data = np.load("data/halo_orbits_sun_earth_search.npy")
+        l1 = np.array([0.9900268049994121, 0])
+
+        print("Transforming to frame centered on L1")
+        search_data -= l1.reshape((1, 1, 2))
+
+        # Get rid of any values under y=0
+        np.clip(search_data[:,:,1], 0, None, out=search_data[:,:,1])
+        print("Done!")
+
+        m1 = 1.
+        m2 = 1/333_480
+        mu = m1 * m2 / (m1 + m2)
+
+        # Apply scaling so that everything fits on the screen
+        scale = 200
+
+        # Add L1 point
+        l1_dot = Dot(point=(0, 0, 0), color=WHITE)
+        l1_label = MathTex("L_1").next_to(l1_dot, DOWN)
+        self.add(l1_dot, l1_label)
+
+        # Add y=0 line
+        y_line = Line(start=(-8, 0, 0), end=(8, 0, 0), color=WHITE)
+        self.add(y_line)
+
+        # Add Earth, Sun points
+        earth_r = [1 - mu, 0] - l1
+        earth_dot = Dot(point=(*earth_r * scale, 0), color=GRAY)
+        earth_label = Text("Earth", font_size=14).next_to(earth_dot, DOWN)
+        self.add(earth_dot, earth_label)
+
+        sun_r = [-mu, 0] - l1
+        sun_dot = Dot(point=(*sun_r * scale, 0), color=GRAY)
+        sun_label = Text("Sun", font_size=14).next_to(sun_dot, DOWN)
+        self.add(sun_dot, sun_label)
+
+        # Add Moon point
+        earth_moon_mu = 0.0123 / (1 + 0.0123)
+        moon_r = earth_r + np.array([1 - earth_moon_mu, 0]) / 387.6
+        moon_dot = Dot(point=(*moon_r * scale, 0), color=GRAY)
+        moon_label = Text("Moon", font_size=14).next_to(moon_dot, DOWN)
+        self.add(moon_dot, moon_label)
+
+        # Add ships
+        ship_dots = TrueDot(center=ORIGIN)
+        ship_dots.clear_points()
+        ship_points = np.pad(search_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
+        ship_dots.add_points(ship_points)
+        ship_dots.set_color(WHITE)
+        self.add(ship_dots)
+
+        # Add a trace on all the ships except the first one.
+        search_traces = VGroup()
+        for i in range(search_data.shape[1]):
+            trace = TracedPath(lambda i=i: ship_dots.points[i], stroke_color=WHITE)
+            search_traces.add(trace)
+        self.add(search_traces)
+
+        self.wait(0.1)
+        self.next_slide()
+
+        time_step = ValueTracker(0)
+
+        def update_ships(mob: TrueDot):
+            time_index = int((len(search_data) - 1) * time_step.get_value())
+            ship_points = np.pad(search_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
+
+            mob.clear_points()
+            mob.add_points(ship_points)
+            mob.set_color(WHITE)
+        ship_dots.add_updater(update_ships)
+
+        self.play(time_step.animate.set_value(1), run_time=4, rate_func=smooth)
+        self.next_slide()
+
+        self.interactive_embed()

@@ -5,7 +5,11 @@ use crate::{
 use ndarray::{array, Array2, Array3, ArrayView2};
 use ndarray_npy::write_npy;
 
-pub fn start() {
+pub fn start_earth_moon() {
+    // Earth-Moon system.
+    let m1 = 1.;
+    let m2 = 0.0123;
+
     // Part 1 ---- Search for halo orbit with distance 0.001
     let distance_to_l1 = 0.0200;
     let num_ships = 10;
@@ -35,8 +39,14 @@ pub fn start() {
         }
     });
 
-    let ship_positions_at_t =
-        simulate_ships(2., ship_positions.view(), ship_velocities.view(), true);
+    let ship_positions_at_t = simulate_ships(
+        2.,
+        m1,
+        m2,
+        ship_positions.view(),
+        ship_velocities.view(),
+        true,
+    );
     write_npy("data/halo_orbits_search.npy", &ship_positions_at_t).unwrap();
 
     // Part 2 ---- Show orbits with various different distances.
@@ -98,9 +108,54 @@ pub fn start() {
         [0., 0.33682369955181457],
         [0., 0.3700428861291137],
     ];
-    let ship_positions_at_t =
-        simulate_ships(4., ship_positions.view(), ship_velocities.view(), false);
+    let ship_positions_at_t = simulate_ships(
+        4.,
+        m1,
+        m2,
+        ship_positions.view(),
+        ship_velocities.view(),
+        false,
+    );
     write_npy("data/halo_orbits.npy", &ship_positions_at_t).unwrap();
+}
+
+pub fn start_sun_earth() {
+    // Sun-Earth system.
+    let m1 = 1.;
+    let m2 = 1. / 333000.;
+
+    // Part 1 ---- Search for halo orbit with distance 0.001
+    let distance_to_l1 = 0.002;
+    let num_ships = 10;
+
+    let ship_positions = array![-distance_to_l1, 0.]
+        .broadcast((num_ships, 2))
+        .unwrap()
+        .to_owned();
+    let min_v = 0.016;
+    let max_v = 0.018;
+    let ship_velocities = Array2::from_shape_fn((num_ships, 2), |(i, j)| {
+        let velocity = min_v + (max_v - min_v) * i as f64 / (num_ships as f64 - 2.0);
+        if j == 0 {
+            0.
+        } else {
+            velocity
+        }
+    });
+
+    let ship_positions_at_t = simulate_ships(
+        2.,
+        m1,
+        m2,
+        ship_positions.view(),
+        ship_velocities.view(),
+        false,
+    );
+    write_npy(
+        "data/halo_orbits_sun_earth_search.npy",
+        &ship_positions_at_t,
+    )
+    .unwrap();
 }
 
 /// Simulate ships around the L1 point of the Earth-Moon system.
@@ -111,6 +166,8 @@ pub fn start() {
 /// co-rotating COM frame.
 pub fn simulate_ships<'a>(
     total_time: f64,
+    m1: f64,
+    m2: f64,
     ship_positions: ArrayView2<'a, f64>,
     ship_velocities: ArrayView2<'a, f64>,
     write_l1: bool,
@@ -119,10 +176,6 @@ pub fn simulate_ships<'a>(
     let time_steps = (total_time / dt) as usize;
 
     log::info!("dt = {dt}, time steps = {time_steps}");
-
-    // Earth-Moon system.
-    let m1 = 1.;
-    let m2 = 0.0123;
 
     let masses = array![m1, m2];
     // Reduced mass for Earth-Moon system.

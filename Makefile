@@ -14,6 +14,9 @@ run-all-simulations:
 	./target/release/simulation single_planet
 	./target/release/simulation multi_planet
 	./target/release/simulation leo_to_moon
+	./target/release/simulation halo_orbits_earth_moon
+	./target/release/simulation halo_orbits_sun_earth
+	./target/release/simulation manifolds_earth_moon
 
 build-video-all:
 	manim -q$(q) slides.py TitleSlide --renderer opengl --write_to_movie

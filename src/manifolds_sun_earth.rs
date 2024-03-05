@@ -6,7 +6,6 @@ use ndarray::{array, s, Array2, Array3, ArrayView2, Axis};
 use ndarray_npy::write_npy;
 
 pub fn start() {
-    // Values obtained from `halo_orbits_compute`.
     let distance_to_l1 = -0.0100;
     let velocity = 0.08934111342264894;
 
