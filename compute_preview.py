@@ -152,7 +152,7 @@ class LeoToMoonTest(Slide):
             time_index = int((len(ship_data) - 1) * time_step.get_value())
             coords = ship_data[time_index, best_ship] * scale
             mob.move_to((coords[0], coords[1], 0))
-        best_ship_dot.add_updater(update_best_ship)
+        best_ship_dot.add_updater(update_best_ship) # type: ignore
 
         self.play(time_step.animate.set_value(1), run_time=10, rate_func=linear)
         self.interactive_embed()

@@ -50,14 +50,13 @@ class SinglePlanet(Slide):
         assert bodies_data.shape[1] == 1, "should only have one planet for this slide"
 
         planet = Dot(point=axes.c2p(*bodies_data[0,0]), color=RED, radius=0.2)
-        self.add(planet)
-        
         ship_initial = Dot(point=axes.c2p(*ships_data[0,0], 0), color=WHITE, radius=0.1)
-        self.play(Create(ship_initial))
+
+        self.add(planet, ship_initial)
         self.wait(0.1)
         self.next_slide()
 
-        v_initial_text = Text(f"v = {ships_velocity_data[0][1]}", font_size=20).next_to(ship_initial, RIGHT)
+        v_initial_text = Text(f"v = {ships_velocity_data[0][1]:.2f}", font_size=20).next_to(ship_initial, RIGHT)
         # Push off!
         def pos(t: float, ship_index: int = 0):
             time_step = int(t * ships_data.shape[0])
@@ -105,11 +104,12 @@ class MultiPlanet(Slide):
             self.add(planet)
         
         ship_initial = Dot(point=axes.c2p(*ships_data[0,0], 0), color=WHITE, radius=0.1)
-        self.play(Create(ship_initial))
+
+        self.add(ship_initial)
         self.wait(0.1)
         self.next_slide()
 
-        v_initial_text = Text(f"v = {ships_velocity_data[0][1]}", font_size=20).next_to(ship_initial, RIGHT)
+        v_initial_text = Text(f"v = {ships_velocity_data[0][1]:.2f}", font_size=20).next_to(ship_initial, RIGHT)
         # Push off!
         def pos(t: float, ship_index: int = 0):
             time_step = int(t * ships_data.shape[0])
@@ -643,9 +643,9 @@ class PotentialHill(Slide):
         self.wait(0.1)
         self.next_slide()
 
-        phase_traces = []
+        phase_traces = VGroup()
         # Shoot some rockets
-        def shoot_rocket(x0: float, v0: float, t: ValueTracker, trace_color = LIMEGREEN) -> Dot:
+        def shoot_rocket(x0: float, v0: float, t: ValueTracker, trace_color = LIMEGREEN, add_to_vgroup: bool = True) -> Dot:
             """
             Takes initial position and total energy and launches a rocket.
             Returns the phase space rocket dot.
@@ -656,7 +656,8 @@ class PotentialHill(Slide):
 
             phase_trace = TracedPath(phase_space_rocket.get_center, stroke_color=trace_color, stroke_width=4)
             self.add(phase_trace)
-            phase_traces.append(phase_trace)
+            if add_to_vgroup:
+                phase_traces.add(phase_trace)
 
             def physical_rocket_update(mob):
                 x = phase_space.p2c(phase_space_rocket.get_center())[0]
@@ -738,10 +739,8 @@ class PotentialHill(Slide):
         )
         legend.arrange(RIGHT, buff=1).next_to(phase_space_title, UP)
 
-        phase_traces = VGroup(*phase_traces)
-
         opacity = ValueTracker(1)
-        self.add_updater(lambda: phase_traces.set_opacity(opacity.get_value())) # HACK: animation seems broken for TracedPath
+        self.add_updater(lambda dt: phase_traces.set_stroke(opacity=opacity.get_value())) # HACK: animation seems broken for TracedPath
 
         self.play(Create(stable), Create(unstable), Write(legend), opacity.animate.set_value(0.3))
         self.next_slide()
@@ -751,7 +750,7 @@ class PotentialHill(Slide):
         rockets = []
         for H in [0.85, 1.15]:
             v0 = np.sqrt(2 * H - 2 * U(0))
-            rockets.append(shoot_rocket(0, v0, t, trace_color=WHITE))
+            rockets.append(shoot_rocket(0, v0, t, trace_color=WHITE, add_to_vgroup=False))
         self.play(t.animate.set_value(10), run_time=4, rate_func=linear)
         self.play(*[FadeOut(rocket, run_time=0.2) for rocket in rockets])
 
