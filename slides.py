@@ -1036,7 +1036,7 @@ class BallisticCapture(Slide):
 
         self.play(FadeIn(earth_moon_unstable), time_step.animate(run_time=3, rate_func=ease_out_cubic).set_value(1))
 
-        ballistic_capture_label = Text("Ballistic capture!", font_size=20).next_to(best_ship_dot, RIGHT)
+        ballistic_capture_label = Text("Arrived at Moon!", font_size=20).next_to(best_ship_dot, RIGHT)
         self.play(Write(ballistic_capture_label))
         self.interactive_embed()
 
