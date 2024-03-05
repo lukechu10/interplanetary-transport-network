@@ -1,3 +1,4 @@
+from manim.utils.rate_functions import ease_in_cubic, ease_out_cubic
 import numpy as np
 from manim import *
 from manim.utils.color.XKCD import LIMEGREEN
@@ -962,9 +963,82 @@ class Manifolds3Body(Slide):
 
 class BallisticCapture(Slide):
     def construct(self):
-        image = OpenGLImageMobject("ballistic_capture.png", width=16, height=9)
-        self.add(image)
+        print("Loading data")
+        bodies_data = np.load("data/leo_to_moon_bodies.npy")
+        ship_data = np.load("data/leo_to_moon_ships.npy")
+        time_steps = bodies_data.shape[0]
+        assert ship_data.shape[0] == time_steps, "ship data and bodies data should have the same number of time steps"
+        bodies_count = bodies_data.shape[1]
+
+        print("Transforming to Earth frame")
+        # Transform positions to (non-corotating) Earth frame.
+        earth_pos = bodies_data[:, 1].reshape((time_steps, 1, 2))
+        ship_data -= earth_pos
+        bodies_data -= earth_pos
+
+        print("Done!")
+
+        # Apply scaling so that everything fits on the screen
+        scale = 1
+
+        colors = [YELLOW, BLUE, GRAY]
+        body_dots = []
+        for i in range(bodies_count):
+            color = colors[i % len(colors)]
+            body_dots.append(Dot(color=color, point=[bodies_data[0,i,0] * scale, bodies_data[0,i,1] * scale, 0])) # type: ignore
+
+        l1_circle = Circle(radius=3.902 * scale, color=BLUE)
+        l1_label = Text("Earth SOI", font_size=20, color=BLUE).next_to(l1_circle, LEFT)
+
+        self.add(*body_dots, l1_circle, l1_label)
+
         self.wait(0.1)
+        self.next_slide()
+
+        time_step = ValueTracker(0)
+        
+        # best_ship = np.load("data/leo_to_moon_best_ship.npy")[0]
+        best_ship = 748 # Obtained from running simulation for t=25.
+        best_ship_start = ship_data[0, best_ship]
+        best_ship_dot = Dot(color=LIMEGREEN, point=(best_ship_start[0] * scale, best_ship_start[1] * scale, 0)) # type: ignore
+        best_ship_trace = TracedPath(best_ship_dot.get_center, stroke_color=LIMEGREEN, stroke_width=2)
+
+        self.add(best_ship_trace, best_ship_dot)
+
+        def update(data, n):
+            def f(mob):
+                coords = data[int((len(data) - 1) * time_step.get_value()), n] * scale
+                mob.move_to((coords[0], coords[1], 0))
+            return f
+        for i in range(bodies_count):
+            body_dots[i].add_updater(update(bodies_data, i))
+
+
+        def update_best_ship(mob: Dot):
+            time_index = int((len(ship_data) - 1) * time_step.get_value())
+            coords = ship_data[time_index, best_ship] * scale
+            mob.move_to((coords[0], coords[1], 0))
+        best_ship_dot.add_updater(update_best_ship) # type: ignore
+
+        self.next_slide()
+
+        self.play(time_step.animate(run_time=4, rate_func=ease_in_cubic).set_value(0.15))
+        sun_earth_stable = Text("Sun-Earth Stable", font_size=18, color=BLUE).next_to(best_ship_dot, UR)
+
+        self.play(FadeIn(sun_earth_stable), time_step.animate(run_time=3, rate_func=linear).set_value(0.4))
+        sun_earth_unstable = Text("Sun-Earth Unstable", font_size=18, color=RED).next_to(best_ship_dot, DOWN)
+
+        self.play(FadeIn(sun_earth_unstable), time_step.animate(run_time=3, rate_func=linear).set_value(0.6))
+        earth_moon_stable = Text("Earth-Moon Stable", font_size=18, color=BLUE).next_to(best_ship_dot, DOWN)
+
+        self.play(FadeIn(earth_moon_stable), time_step.animate(run_time=3, rate_func=linear).set_value(0.9))
+        earth_moon_unstable = Text("Earth-Moon Unstable", font_size=18, color=RED).next_to(best_ship_dot, DR)
+
+        self.play(FadeIn(earth_moon_unstable), time_step.animate(run_time=3, rate_func=ease_out_cubic).set_value(1))
+
+        ballistic_capture_label = Text("Ballistic capture!", font_size=20).next_to(best_ship_dot, RIGHT)
+        self.play(Write(ballistic_capture_label))
+        self.interactive_embed()
 
 class References(Slide):
     def construct(self):
