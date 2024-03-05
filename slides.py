@@ -664,11 +664,11 @@ class Manifolds3Body(Slide):
         mu = 1 * 0.0123 / (1 + 0.0123)
 
         # Apply scaling so that everything fits on the screen
-        scale = 3
+        scale = 6
 
         # Add L1 point
-        l1_dot = Dot(point=(*l1_earth_moon * scale, 0), color=WHITE)
-        l1_label = MathTex("L_1").next_to(l1_dot, DOWN)
+        l1_dot = Dot(point=(*l1_earth_moon * scale, 0), color=WHITE, radius=0.04)
+        l1_label = MathTex("L_1", font_size=14).next_to(l1_dot, DOWN)
         self.add(l1_dot, l1_label)
 
         # Add Moon, Earth points

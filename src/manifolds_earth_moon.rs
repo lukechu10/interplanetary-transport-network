@@ -6,8 +6,8 @@ use ndarray::{array, s, Array2, Array3, ArrayView2, Axis};
 use ndarray_npy::write_npy;
 
 pub fn start() {
-    let distance_to_l1 = -0.040;
-    let velocity = 0.3700428861291137;
+    let distance_to_l1 = -0.0100;
+    let velocity = 0.08934111342264894;
 
     // Simulate ship to get complete orbit.
     let (orbit_r, orbit_v) = simulate_ships(
@@ -24,7 +24,7 @@ pub fn start() {
     // outline of the unstable manifold.
     //
     // For simplicity, we only perturb velocity.
-    let epsilon = 0.01;
+    let epsilon = 0.001;
     let perturbations = array![[epsilon, 0.], [-epsilon, 0.], [0., epsilon], [0., -epsilon]];
     let perturbations_per_point = perturbations.len_of(Axis(0));
     let perturbation_points_count = 40;
@@ -55,7 +55,7 @@ pub fn start() {
 
     // Now we can simulate the ships.
     let dt = 0.00005;
-    let total_time = 5.;
+    let total_time = 4.;
     let time_steps = (total_time / dt) as usize;
 
     let m1 = 1.;
