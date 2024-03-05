@@ -29,7 +29,7 @@ build-video-all:
 	manim -q$(q) slides.py HaloOrbits --renderer opengl --write_to_movie
 	manim -q$(q) slides.py BallisticCapture --renderer opengl --write_to_movie
 	manim -q$(q) slides.py PotentialHill --renderer opengl --write_to_movie
-	manim -q$(q) slides.py Manifolds3Body --renderer opengl --write_to_movie
+	manim -q$(q) slides.py Manifolds3BodyNew --renderer opengl --write_to_movie
 	manim -q$(q) slides.py References --renderer opengl --write_to_movie
 
 build-slides-html:
@@ -45,7 +45,7 @@ build-slides-html:
 		HaloOrbits \
 		BallisticCapture \
 		PotentialHill \
-		Manifolds3Body \
+		Manifolds3BodyNew \
 		BallisticCapture \
 		References \
 		docs/index.html

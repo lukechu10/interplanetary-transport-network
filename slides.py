@@ -763,6 +763,187 @@ class Manifolds3Body(Slide):
         
         self.interactive_embed()
 
+class Manifolds3BodyNew(Slide):
+    scale = 400
+
+    def construct(self):
+        # === Sun-Earth manifolds ===
+        print("Loading data")
+        orbit_data = np.load("data/manifolds_sun_earth_orbit.npy")
+        unstable_data = np.load("data/manifolds_sun_earth_unstable.npy")
+        stable_data = np.load("data/manifolds_sun_earth_stable.npy")
+        l1_sun_earth = np.load("data/manifolds_sun_earth_l1.npy")
+        
+        m1 = 1
+        m2 = 1/333000
+        mu = m1 * m2 / (m1 + m2)
+        earth_pos = np.array([1 - mu, 0])
+        earth_pos = earth_pos.reshape((1, 1, 2))
+
+        # Transform positions so that Earth is at the origin.
+        orbit_data -= earth_pos
+        unstable_data -= earth_pos
+        stable_data -= earth_pos
+        l1_sun_earth -= earth_pos.reshape(2)
+
+        # Apply scaling so that everything fits on the screen
+        scale = self.scale
+
+        # Add L1 point
+        l1_dot = Dot(point=(*l1_sun_earth * scale, 0), color=WHITE, radius=0.04)
+        l1_label = always_redraw(lambda: MathTex("L_1", font_size=14).next_to(l1_dot, DOWN))
+        self.add(l1_dot, l1_label)
+
+        # Center on Earth.
+        earth_r = np.array([0, 0])
+        earth_dot = Dot(point=(*earth_r * scale, 0), color=GRAY)
+        earth_label = Text("Earth", font_size=14).next_to(earth_dot, DOWN)
+        self.add(earth_dot, earth_label)
+
+        self.wait(0.1)
+        self.next_slide()
+
+        # Add all the unstable manifold ships as parametric functions
+        time_steps = unstable_data.shape[0]
+        assert stable_data.shape[0] == time_steps, "stable data and unstable data should have the same number of time steps"
+        
+        num_ships = unstable_data.shape[1]
+        assert stable_data.shape[1] == num_ships, "stable data and unstable data should have the same number of ships"
+
+        print("Creating traces of manifolds")
+        unstable_traces = VGroup()
+        stable_traces = VGroup()
+        for i in range(num_ships):
+            unstable = ParametricFunction(
+                function=lambda t, i=i: (*unstable_data[int(t * (time_steps - 1)), i] * scale, 0), # type: ignore
+                t_range=[0, 1],
+                color=RED,
+            )
+            unstable_traces.add(unstable)
+            stable = ParametricFunction(
+                function=lambda t, i=i: (*stable_data[int(t * (time_steps - 1)), i] * scale, 0), # type: ignore
+                t_range=[0, 1],
+                color=BLUE,
+            )
+            stable_traces.add(stable)
+        print("Done!")
+        
+        orbit_time_steps = orbit_data.shape[0]
+        orbit_trace = ParametricFunction(
+            function=lambda t: (*orbit_data[int(t * (orbit_time_steps - 1)), 0] * scale, 0), # type: ignore
+            t_range=[0, 1],
+            color=LIMEGREEN,
+        ).set_stroke(width=2)
+
+        unstable_traces.set_stroke(width=2, opacity=0.7)
+        stable_traces.set_stroke(width=2, opacity=0.7)
+
+        legend = VGroup(
+            Text("Unstable", font_size=22, color=RED),
+            Text("Stable", font_size=22, color=BLUE),
+        )
+        legend.arrange(DOWN, buff=1).to_edge(RIGHT)
+        self.play(FadeIn(unstable_traces), FadeIn(stable_traces), FadeIn(orbit_trace), Write(legend))
+
+        self.next_slide(auto_next=True) # Next slide is spinning Earth-Moon frame.
+
+        # Create scaled versions of all the manifolds and transform to these to produce the effect of zooming in.
+        scaled = lambda mob: mob.copy().scale(4).move_to(mob.get_center() * 4)
+        stable_traces_scaled = scaled(stable_traces)
+        unstable_traces_scaled = scaled(unstable_traces)
+        orbit_trace_scaled = scaled(orbit_trace)
+
+        self.play(
+            l1_dot.animate.move_to(l1_dot.get_center() * 4),
+            Transform(unstable_traces, unstable_traces_scaled),
+            Transform(stable_traces, stable_traces_scaled),
+            Transform(orbit_trace, orbit_trace_scaled),
+            run_time=1.5,
+        )
+        self.play(
+            FadeOut(unstable_traces),
+            FadeOut(stable_traces),
+            FadeOut(orbit_trace),
+            run_time=0.5
+        )
+        self.remove(l1_dot, l1_label)
+
+        self.construct_earth_moon_manifolds()
+
+    def construct_earth_moon_manifolds(self):
+        # Add in the Earth-Moon manifolds in the rotating frame.
+        # === Earth-Moon manifolds ===
+        print("Loading data")
+        orbit_data = np.load("data/manifolds_earth_moon_orbit.npy")
+        unstable_data = np.load("data/manifolds_earth_moon_unstable.npy")
+        stable_data = np.load("data/manifolds_earth_moon_stable.npy")
+
+        mu = 1 * 0.0123 / (1 + 0.0123)
+
+        # Apply scaling so that everything fits on the screen
+        sun_earth_scale = 1/378.6
+        scale = self.scale * sun_earth_scale * 4 # 4 is from scaling of previous manifolds
+
+        earth_r = np.array([-mu, 0])
+        # Transform everything to Earth frame
+        orbit_data -= earth_r.reshape((1, 1, 2))
+        unstable_data -= earth_r.reshape((1, 1, 2))
+        stable_data -= earth_r.reshape((1, 1, 2))
+
+        moon_r = np.array([1, 0])
+        moon_dot = Dot(point=(*moon_r * scale, 0), color=GRAY)
+        moon_label = always_redraw(lambda: Text("Moon", font_size=14).next_to(moon_dot, DOWN))
+
+        # Add all the unstable manifold ships as parametric functions
+        time_steps = unstable_data.shape[0]
+        assert stable_data.shape[0] == time_steps, "stable data and unstable data should have the same number of time steps"
+        
+        num_ships = unstable_data.shape[1]
+        assert stable_data.shape[1] == num_ships, "stable data and unstable data should have the same number of ships"
+
+        print("Creating traces of manifolds")
+        unstable_traces = VGroup()
+        stable_traces = VGroup()
+        for i in range(num_ships):
+            unstable = ParametricFunction(
+                function=lambda t, i=i: (*unstable_data[int(t * (time_steps - 1)), i] * scale, 0), # type: ignore
+                t_range=[0, 1],
+                color=RED,
+            )
+            unstable_traces.add(unstable)
+            stable = ParametricFunction(
+                function=lambda t, i=i: (*stable_data[int(t * (time_steps - 1)), i] * scale, 0), # type: ignore
+                t_range=[0, 1],
+                color=BLUE,
+            )
+            stable_traces.add(stable)
+        print("Done!")
+        
+        orbit_time_steps = orbit_data.shape[0]
+        orbit_trace = ParametricFunction(
+            function=lambda t: (*orbit_data[int(t * (orbit_time_steps - 1)), 0] * scale, 0), # type: ignore
+            t_range=[0, 1],
+            color=LIMEGREEN,
+        ).set_stroke(width=2)
+
+        unstable_traces.set_stroke(width=1, opacity=0.5)
+        stable_traces.set_stroke(width=1, opacity=0.5)
+
+        # Whole frame is constantly rotating.
+        rate = 1 / 2
+        always_rotate(unstable_traces, rate=rate, about_point=ORIGIN)
+        always_rotate(stable_traces, rate=rate, about_point=ORIGIN)
+        always_rotate(orbit_trace, rate=rate, about_point=ORIGIN)
+        always_rotate(moon_dot, rate=rate, about_point=ORIGIN)
+
+        self.add(moon_dot, moon_label)
+        self.play(FadeIn(unstable_traces), FadeIn(stable_traces), FadeIn(orbit_trace))
+        
+        self.next_slide(loop=True)
+        self.wait(4 * PI) # Full cycle
+
+        self.interactive_embed()
+
 class References(Slide):
     def construct(self):
         vg = VGroup()
