@@ -4,7 +4,7 @@ use ndarray_npy::write_npy;
 
 pub fn start() {
     // Units are c * secs.
-    let total_time = 25.;
+    let total_time = 24.3;
     let dt = 0.001;
     let time_steps = (total_time / dt) as usize;
 

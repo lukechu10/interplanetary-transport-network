@@ -168,16 +168,9 @@ class LeoToMoon(Slide):
         for i in range(bodies_count):
             color = colors[i % len(colors)]
             body_dots.append(Dot(color=color, point=[bodies_data[0,i,0] * scale, bodies_data[0,i,1] * scale, 0])) # type: ignore
-        self.add(*body_dots)
 
         l1_circle = Circle(radius=3.902 * scale, color=BLUE)
-        self.add(l1_circle)
-
         l1_label = Text("Earth SOI", font_size=20, color=BLUE).next_to(l1_circle, LEFT)
-        self.add(l1_label)
-
-        self.wait(0.1)
-        self.next_slide()
 
         # Add ships
         ship_dots = TrueDot(center=ORIGIN)
@@ -185,14 +178,18 @@ class LeoToMoon(Slide):
         ship_points = np.pad(ship_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
         ship_dots.add_points(ship_points)
         ship_dots.set_color(WHITE)
-        self.add(ship_dots)
+
+        leo_label = Text("Low Earth Orbit", font_size=20).next_to(body_dots[1], DOWN)
+
+        self.add(*body_dots, l1_circle, l1_label, ship_dots, leo_label)
 
         self.wait(0.1)
         self.next_slide()
 
         time_step = ValueTracker(0)
         
-        best_ship = np.load("data/leo_to_moon_best_ship.npy")[0]
+        # best_ship = np.load("data/leo_to_moon_best_ship.npy")[0]
+        best_ship = 748 # Obtained from running simulation for t=25.
         best_ship_start = ship_data[0, best_ship]
         best_ship_dot = Dot(color=LIMEGREEN, point=(best_ship_start[0] * scale, best_ship_start[1] * scale, 0)) # type: ignore
         best_ship_trace = TracedPath(best_ship_dot.get_center, stroke_color=LIMEGREEN, stroke_width=2)
@@ -229,9 +226,30 @@ class LeoToMoon(Slide):
             mob.move_to((coords[0], coords[1], 0))
         best_ship_dot.add_updater(update_best_ship) # type: ignore
 
-        self.play(time_step.animate.set_value(0.05), run_time=4, rate_func=smooth)
+
+        # Hide best ship for now.
+        best_ship_dot.set_opacity(0)
+        best_ship_trace.set_stroke(opacity=0)
+
+        self.play(FadeOut(leo_label), time_step.animate(run_time=4, rate_func=smooth).set_value(0.05))
+        
+        hohmann_label = Text("Hohmann\ntransfer", font_size=20).next_to(body_dots[2], DOWN)
+        self.play(Write(hohmann_label))
+
         self.next_slide()
-        self.play(time_step.animate.set_value(1), run_time=20, rate_func=smooth)
+
+        # Show best ship + trace now.
+        opacity = ValueTracker(0)
+        def update_opacity(dt):
+            best_ship_dot.set_opacity(opacity.get_value())
+            best_ship_trace.set_stroke(opacity=opacity.get_value())
+        self.add_updater(update_opacity)
+
+        self.play(FadeOut(hohmann_label), opacity.animate(run_time=1).set_value(1), time_step.animate(run_time=20, rate_func=smooth).set_value(1))
+        self.remove_updater(update_opacity) # Remove for performance
+
+        ballistic_capture_label = Text("Ballistic capture!", font_size=20).next_to(best_ship_dot, DOWN)
+        self.play(Write(ballistic_capture_label))
         self.interactive_embed()
 
 class EffectivePotential(ThreeDSlide):
