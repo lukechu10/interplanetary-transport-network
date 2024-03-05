@@ -23,13 +23,14 @@ build-video-all:
 	manim -q$(q) slides.py BuildingATracer --renderer opengl --write_to_movie
 	manim -q$(q) slides.py SinglePlanet --renderer opengl --write_to_movie
 	manim -q$(q) slides.py MultiPlanet --renderer opengl --write_to_movie
-	manim -q$(q) slides.py ReducedNBodyProblem --renderer opengl --write_to_movie
+	manim -q$(q) slides.py RestrictedNBodyProblem --renderer opengl --write_to_movie
 	manim -q$(q) slides.py LeoToMoon --renderer opengl --write_to_movie
 	manim -q$(q) slides.py EffectivePotential --renderer opengl --write_to_movie
 	manim -q$(q) slides.py HaloOrbits --renderer opengl --write_to_movie
-	manim -q$(q) slides.py BallisticCapture --renderer opengl --write_to_movie
+	manim -q$(q) slides.py EarthMoonManifolds --renderer opengl --write_to_movie
 	manim -q$(q) slides.py PotentialHill --renderer opengl --write_to_movie
 	manim -q$(q) slides.py Manifolds3Body --renderer opengl --write_to_movie
+	manim -q$(q) slides.py BallisticCapture --renderer opengl --write_to_movie
 	manim -q$(q) slides.py References --renderer opengl --write_to_movie
 
 build-slides-html:
@@ -39,11 +40,11 @@ build-slides-html:
 		BuildingATracer \
 		SinglePlanet \
 		MultiPlanet \
-		ReducedNBodyProblem \
+		RestrictedNBodyProblem \
 		LeoToMoon \
 		EffectivePotential \
 		HaloOrbits \
-		BallisticCapture \
+		EarthMoonManifolds \
 		PotentialHill \
 		Manifolds3Body \
 		BallisticCapture \

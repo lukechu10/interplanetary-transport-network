@@ -133,14 +133,14 @@ class MultiPlanet(Slide):
         self.wait(0.1)
         self.interactive_embed()
 
-class ReducedNBodyProblem(Slide):
+class RestrictedNBodyProblem(Slide):
     def construct(self):
-        table = Table([
-            ["Full n-body problem", "Reduced n-body problem"],
-            ["3 planets + 1 ship", "3 planets + 1 ship"],
-            ["12 forces", "6 forces + 3 forces"],
-        ]).scale(0.5)
-        self.play(Write(table))
+        text = VGroup(
+            Text("Restricted n-body problem"),
+            Text("Massive bodies (Sun, Earth, Moon, etc...)", font_size=20),
+            Text("Spaceships feel influence (but do not influence other bodies themselves)", font_size=20),
+        ).arrange(DOWN)
+        self.play(Write(text))
         self.wait()
 
 class LeoToMoon(Slide):
@@ -174,6 +174,9 @@ class LeoToMoon(Slide):
 
         l1_circle = Circle(radius=3.902 * scale, color=BLUE)
         self.add(l1_circle)
+
+        l1_label = Text("Earth SOI", font_size=20, color=BLUE).next_to(l1_circle, LEFT)
+        self.add(l1_label)
 
         self.wait(0.1)
         self.next_slide()
@@ -494,11 +497,110 @@ class HaloOrbits(Slide):
 
         self.interactive_embed()
 
-class BallisticCapture(Slide):
+class EarthMoonManifolds(Slide):
     def construct(self):
-        image = OpenGLImageMobject("ballistic_capture.png", width=16, height=9)
-        self.add(image)
+        # === Earth-Moon manifolds ===
+        print("Loading data")
+        orbit_data = np.load("data/manifolds_earth_moon_orbit.npy")
+        unstable_data = np.load("data/manifolds_earth_moon_unstable.npy")
+        stable_data = np.load("data/manifolds_earth_moon_stable.npy")
+        l1_earth_moon = np.load("data/manifolds_earth_moon_l1.npy")
+
+        mu = 1 * 0.0123 / (1 + 0.0123)
+
+        # Apply scaling so that everything fits on the screen
+        scale = 6
+
+        # Add L1 point
+        l1_dot = Dot(point=(*l1_earth_moon * scale, 0), color=WHITE, radius=0.04)
+        l1_label = MathTex("L_1", font_size=14).next_to(l1_dot, DOWN)
+        self.add(l1_dot, l1_label)
+
+        # Add Moon, Earth points
+        moon_r = np.array([1 - mu, 0])
+        moon_dot = Dot(point=(*moon_r * scale, 0), color=GRAY)
+        moon_label = Text("Moon", font_size=14).next_to(moon_dot, RIGHT)
+        self.add(moon_dot, moon_label)
+
+        earth_r = np.array([-mu, 0])
+        earth_dot = Dot(point=(*earth_r * scale, 0), color=GRAY)
+        earth_label = Text("Earth", font_size=14).next_to(earth_dot, LEFT)
+        self.add(earth_dot, earth_label)
+
+        # Add ships
+        unstable_dots = TrueDot(center=ORIGIN)
+        unstable_dots.clear_points()
+        unstable_points = np.pad(unstable_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
+        unstable_dots.add_points(unstable_points)
+        unstable_dots.set_color(RED)
+        self.add(unstable_dots)
+
+        stable_dots = TrueDot(center=ORIGIN)
+        stable_dots.clear_points()
+        stable_points = np.pad(stable_data[0] * scale, ((0, 0), (0, 1)), mode="constant")
+        stable_dots.add_points(stable_points)
+        stable_dots.set_color(BLUE)
+        self.add(stable_dots)
+
+        # Add a trace on all the ships
+        unstable_traces = VGroup()
+        for i in range(0, unstable_data.shape[1]):
+            trace = TracedPath(lambda i=i: unstable_dots.points[i], stroke_color=RED)
+            unstable_traces.add(trace)
+        self.add(unstable_traces)
+
+        stable_traces = VGroup()
+        for i in range(0, stable_data.shape[1]):
+            trace = TracedPath(lambda i=i: stable_dots.points[i], stroke_color=BLUE)
+            stable_traces.add(trace)
+        self.add(stable_traces)
+
         self.wait(0.1)
+
+        time_step = ValueTracker(0)
+
+        def update_unstable(mob: TrueDot):
+            time_index = int((len(unstable_data) - 1) * time_step.get_value())
+            ship_points = np.pad(unstable_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
+
+            mob.clear_points()
+            mob.add_points(ship_points)
+            mob.set_color(RED)
+        unstable_dots.add_updater(update_unstable)
+        def update_stable(mob: TrueDot):
+            time_index = int((len(stable_data) - 1) * time_step.get_value())
+            ship_points = np.pad(stable_data[time_index] * scale, ((0, 0), (0, 1)), mode="constant")
+
+            mob.clear_points()
+            mob.add_points(ship_points)
+            mob.set_color(BLUE)
+        stable_dots.add_updater(update_stable)
+
+        # Add orbit trace
+        orbit_dot = Dot(point=(*orbit_data[0, 0] * scale, 0)).set_opacity(0)
+        self.add(orbit_dot)
+        def update_orbit(mob: Dot):
+            time_index = int((len(orbit_data) - 1) * time_step.get_value())
+            coords = orbit_data[time_index, 0] * scale
+            mob.move_to((coords[0], coords[1], 0))
+        orbit_trace = TracedPath(orbit_dot.get_center, stroke_color=LIMEGREEN, stroke_width=4)
+        orbit_dot.add_updater(update_orbit) # type: ignore
+        self.add(orbit_trace)
+
+        # Set opacity
+        stable_traces.set_opacity(0.5)
+        unstable_traces.set_opacity(0.5)
+
+        self.play(time_step.animate.set_value(1), run_time=8, rate_func=linear)
+
+        legend = VGroup(
+            Text("Stable", font_size=22, color=BLUE),
+            Text("Unstable", font_size=22, color=RED),
+        )
+        legend.arrange(DOWN, buff=1).to_edge(LEFT)
+        self.play(Write(legend))
+
+        self.interactive_embed()
 
 class PotentialHill(Slide):
     def construct(self):
@@ -517,8 +619,8 @@ class PotentialHill(Slide):
             y_length=5
         )
         group.add(physical_space, phase_space).arrange(RIGHT)
-        physical_space_title = Text("Physical space").next_to(physical_space, DOWN)
-        phase_space_title = Text("Phase space").next_to(phase_space, DOWN)
+        physical_space_title = Text("Physical space", font_size=26).next_to(physical_space, DOWN)
+        phase_space_title = Text("Phase space", font_size=26).next_to(phase_space, DOWN)
 
         physical_labels = physical_space.get_axis_labels(Tex("x"), Tex("U"))
         phase_space_labels = phase_space.get_axis_labels(Tex("x"), Tex("v"))
@@ -536,14 +638,12 @@ class PotentialHill(Slide):
 
         self.play(Create(physical_space), Create(physical_labels), Write(physical_space_title))
         self.play(Create(u_curve), Create(area))
-        self.wait(0.1)
-
-        self.next_slide()
 
         self.play(Create(phase_space), Create(phase_space_labels), Write(phase_space_title))
         self.wait(0.1)
         self.next_slide()
 
+        phase_traces = []
         # Shoot some rockets
         def shoot_rocket(x0: float, v0: float, t: ValueTracker, trace_color = LIMEGREEN) -> Dot:
             """
@@ -556,6 +656,7 @@ class PotentialHill(Slide):
 
             phase_trace = TracedPath(phase_space_rocket.get_center, stroke_color=trace_color, stroke_width=4)
             self.add(phase_trace)
+            phase_traces.append(phase_trace)
 
             def physical_rocket_update(mob):
                 x = phase_space.p2c(phase_space_rocket.get_center())[0]
@@ -637,7 +738,12 @@ class PotentialHill(Slide):
         )
         legend.arrange(RIGHT, buff=1).next_to(phase_space_title, UP)
 
-        self.play(Create(stable), Create(unstable), Write(legend))
+        phase_traces = VGroup(*phase_traces)
+
+        opacity = ValueTracker(1)
+        self.add_updater(lambda: phase_traces.set_opacity(opacity.get_value())) # HACK: animation seems broken for TracedPath
+
+        self.play(Create(stable), Create(unstable), Write(legend), opacity.animate.set_value(0.3))
         self.next_slide()
 
         # Shoot two rockets just above and below stable manifold.
@@ -688,8 +794,10 @@ class Manifolds3Body(Slide):
         earth_label = Text("Earth", font_size=14).next_to(earth_dot, DOWN)
         self.add(earth_dot, earth_label)
 
-        self.wait(0.1)
-        self.next_slide()
+        # Add arrow pointing to the Sun.
+        sun_arrow = Vector([-1, 0]).to_edge(LEFT)
+        sun_label = Text("Sun", font_size=14).next_to(sun_arrow, DOWN)
+        self.add(sun_arrow, sun_label)
 
         # Add all the unstable manifold ships as parametric functions
         time_steps = unstable_data.shape[0]
@@ -722,6 +830,7 @@ class Manifolds3Body(Slide):
             t_range=[0, 1],
             color=LIMEGREEN,
         ).set_stroke(width=2)
+        self.add(orbit_trace) # Start with orbit trace on the slide.
 
         unstable_traces.set_stroke(width=2, opacity=0.7)
         stable_traces.set_stroke(width=2, opacity=0.7)
@@ -731,7 +840,11 @@ class Manifolds3Body(Slide):
             Text("Stable", font_size=22, color=BLUE),
         )
         legend.arrange(DOWN, buff=1).to_edge(RIGHT)
-        self.play(FadeIn(unstable_traces), FadeIn(stable_traces), FadeIn(orbit_trace), Write(legend))
+
+        self.wait(0.1)
+        self.next_slide()
+
+        self.play(FadeIn(unstable_traces), FadeIn(stable_traces), Write(legend))
 
         self.next_slide(auto_next=True) # Next slide is spinning Earth-Moon frame.
 
@@ -831,6 +944,12 @@ class Manifolds3Body(Slide):
         self.wait(4 * PI) # Full cycle
 
         self.interactive_embed()
+
+class BallisticCapture(Slide):
+    def construct(self):
+        image = OpenGLImageMobject("ballistic_capture.png", width=16, height=9)
+        self.add(image)
+        self.wait(0.1)
 
 class References(Slide):
     def construct(self):
