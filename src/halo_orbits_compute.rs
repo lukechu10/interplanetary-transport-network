@@ -265,10 +265,9 @@ pub fn find_velocity_for_distance_to_l1(
         if new_low_v == low_v && new_high_v == high_v {
             log::error!("No change in low_v and high_v. Stuck.");
             break;
-        } else {
-            low_v = new_low_v;
-            high_v = new_high_v;
         }
+        low_v = new_low_v;
+        high_v = new_high_v;
     }
 
     low_v

@@ -99,8 +99,6 @@ pub fn start() {
     write_npy("data/manifolds_earth_moon_stable.npy", &stable_t).unwrap();
 
     // Save L1 point for reference in animation.
-    let m1 = 1.;
-    let m2 = 0.0123;
     let l1_x = find_l1_x(m1, m2);
     write_npy("data/manifolds_earth_moon_l1.npy", &array![l1_x, 0.]).unwrap()
 }

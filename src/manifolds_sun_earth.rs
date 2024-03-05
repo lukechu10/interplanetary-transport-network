@@ -6,17 +6,22 @@ use ndarray::{array, s, Array2, Array3, ArrayView2, Axis};
 use ndarray_npy::write_npy;
 
 pub fn start() {
-    let distance_to_l1 = -0.0100;
-    let velocity = 0.08934111342264894;
+    let distance_to_l1 = -0.0015;
+    let velocity = 0.012044707555952983;
+
+    let m1 = 1.;
+    let m2 = 1. / 333000.;
 
     // Simulate ship to get complete orbit.
     let (orbit_r, orbit_v) = simulate_ships(
         4.,
+        m1,
+        m2,
         array![[distance_to_l1, 0.]].view(),
         array![[0., velocity]].view(),
         false,
     );
-    write_npy("data/manifolds_earth_moon_orbit.npy", &orbit_r).unwrap();
+    write_npy("data/manifolds_sun_earth_orbit.npy", &orbit_r).unwrap();
 
     let time_steps = orbit_r.len_of(Axis(0));
 
@@ -24,7 +29,7 @@ pub fn start() {
     // outline of the unstable manifold.
     //
     // For simplicity, we only perturb velocity.
-    let epsilon = 0.001;
+    let epsilon = 0.0001;
     let perturbations = array![[epsilon, 0.], [-epsilon, 0.], [0., epsilon], [0., -epsilon]];
     let perturbations_per_point = perturbations.len_of(Axis(0));
     let perturbation_points_count = 40;
@@ -55,11 +60,11 @@ pub fn start() {
 
     // Now we can simulate the ships.
     let dt = 0.00005;
-    let total_time = 4.;
+    let total_time = 3.;
     let time_steps = (total_time / dt) as usize;
 
     let m1 = 1.;
-    let m2 = 0.0123;
+    let m2 = 1. / 333000.;
     let mu = m1 * m2 / (m1 + m2);
     let omega = (m1 + m2) / m1;
     let masses = array![m1, m2];
@@ -80,7 +85,7 @@ pub fn start() {
         fictitious_force: fictitious_force_rotating_frame(omega),
     };
     let unstable_t = trace_ships(opts);
-    write_npy("data/manifolds_earth_moon_unstable.npy", &unstable_t).unwrap();
+    write_npy("data/manifolds_sun_earth_unstable.npy", &unstable_t).unwrap();
 
     // Now reverse ship_velocities and omega to trace stable manifold.
     let ship_velocities = -ship_velocities;
@@ -95,13 +100,11 @@ pub fn start() {
         fictitious_force: fictitious_force_rotating_frame(omega),
     };
     let stable_t = trace_ships(opts);
-    write_npy("data/manifolds_earth_moon_stable.npy", &stable_t).unwrap();
+    write_npy("data/manifolds_sun_earth_stable.npy", &stable_t).unwrap();
 
     // Save L1 point for reference in animation.
-    let m1 = 1.;
-    let m2 = 0.0123;
     let l1_x = find_l1_x(m1, m2);
-    write_npy("data/manifolds_earth_moon_l1.npy", &array![l1_x, 0.]).unwrap()
+    write_npy("data/manifolds_sun_earth_l1.npy", &array![l1_x, 0.]).unwrap()
 }
 
 /// Simulate ships around the L1 point of the Earth-Moon system.
@@ -112,6 +115,8 @@ pub fn start() {
 /// co-rotating COM frame.
 pub fn simulate_ships<'a>(
     total_time: f64,
+    m1: f64,
+    m2: f64,
     ship_positions: ArrayView2<'a, f64>,
     ship_velocities: ArrayView2<'a, f64>,
     write_l1: bool,
@@ -120,10 +125,6 @@ pub fn simulate_ships<'a>(
     let time_steps = (total_time / dt) as usize;
 
     log::info!("dt = {dt}, time steps = {time_steps}");
-
-    // Earth-Moon system.
-    let m1 = 1.;
-    let m2 = 0.0123;
 
     let masses = array![m1, m2];
     // Reduced mass for Earth-Moon system.

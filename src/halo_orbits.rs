@@ -181,14 +181,12 @@ pub fn simulate_ships<'a>(
     // Reduced mass for Earth-Moon system.
     let mu = m1 * m2 / (m1 + m2);
 
-    // Moon starts on opposite side of Sun from Earth.
+    // Use COM co-rotating frame.
     let mass_positions = array![[-mu, 0.], [1. - mu, 0.]];
+    let mass_positions_at_t = mass_positions.broadcast((time_steps, 2, 2)).unwrap();
 
     // Moon angular frequency.
     let omega = (m1 + m2) / m1;
-
-    // Use co-rotating frame.
-    let mass_positions_at_t = mass_positions.broadcast((time_steps, 2, 2)).unwrap();
 
     let l1_x = find_l1_x(m1, m2);
     let l1 = array![l1_x, 0.];
