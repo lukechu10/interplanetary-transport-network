@@ -6,9 +6,9 @@ See the presentation [here](https://lukechu10.github.io/interplanetary-transport
 
 **Dependencies**:
 
-- Up to date installation of Rust.
+- Up to date installation of [Rust](https://www.rust-lang.org/).
 - Up to date installation of Python.
-- ManimCE v0.18
+- [Manim Community Edition](https://github.com/ManimCommunity/manim) v0.18 and [manim-slides](https://github.com/jeertmans/manim-slides) v5.1
 - Make
 
 Run all the simulations first by running `make run-all-simulations`.
