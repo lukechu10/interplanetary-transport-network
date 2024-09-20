@@ -61,7 +61,10 @@ class SinglePlanet(Slide):
         planet = Dot(point=axes.c2p(*bodies_data[0,0]), color=RED, radius=0.2)
         ship_initial = Dot(point=axes.c2p(*ships_data[0,0], 0), color=WHITE, radius=0.1)
 
-        self.add(planet, ship_initial)
+        planet_label = Text("Planet", font_size=20).next_to(planet, LEFT)
+        ship_label = Text("Spaceship", font_size=20).next_to(ship_initial, RIGHT)
+
+        self.add(planet, ship_initial, planet_label, ship_label)
         self.wait(0.1)
         self.next_slide()
 
@@ -72,7 +75,7 @@ class SinglePlanet(Slide):
             return axes.c2p(*ships_data[time_step, ship_index], 0)
         func = ParametricFunction(pos, t_range=[0.0, 0.9]) # type: ignore
 
-        self.play(Write(v_initial_text), Create(func, run_time=3))
+        self.play(Write(v_initial_text), Create(func, run_time=3), FadeOut(planet_label), FadeOut(ship_label))
         self.next_slide()
 
         # Vary the velocity now.
