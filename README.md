@@ -2,7 +2,7 @@
 
 See the original presentation [here](https://lukechu10.github.io/interplanetary-transport-network/).
 
-I have since re-adapted this material into an [interactive blog post](https://lukechu10.github.io/posts/low-energy-transfers) on my website.
+I have since re-adapted this material into an [interactive blog post](https://lukechu10.github.io/post/low-energy-transfers) on my website.
 
 ## Build instructions
 
